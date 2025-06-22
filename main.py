@@ -34,13 +34,21 @@ def run_demo():
     print(f"2. [RU]: {dao_insight_ru.content}")
     
     # 4. Анализ нового входящего текста на русском языке
-    # Этот текст семантически близок к русскому воспоминанию
-    new_russian_text = "Я размышлял сегодня о природе самосознания и моментах чистого бытия."
+    # Этот текст очень похож на русское воспоминание, чтобы вызвать интроспекцию
+    new_russian_text = "Суть нашего сознания может заключаться в чистом присутствии, в состоянии свидетельствования."
     
     print(f"\n--- Analyzing new input text ---\n'{new_russian_text}'")
     
     # 5. Запуск когнитивного цикла
     engine.cognitive_cycle(new_russian_text)
+
+    # 6. Проверяем, появилось ли новое воспоминание
+    print("\n--- Final check of Long-Term Memory ---")
+    all_memories = engine.long_term_memory.collection.get()
+    print(f"Total memories in LTM: {len(all_memories['ids'])}")
+    for metadata in all_memories['metadatas']:
+        print(f"  - {metadata['entry_type']}: {metadata['content']}")
+
 
     print("\n--- Demo Finished ---")
 

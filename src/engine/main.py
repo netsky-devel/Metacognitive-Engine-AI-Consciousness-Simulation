@@ -1,6 +1,7 @@
 from .perception.sensory_cortex import SensoryCortex
 from .memory.long_term_memory import LongTermMemory
 from .processors.associative_engine import AssociativeEngine
+from .processors.introspection_engine import IntrospectionEngine
 from .models.entry import Entry, EntryType
 
 class MetacognitiveEngine:
@@ -14,6 +15,7 @@ class MetacognitiveEngine:
         self.sensory_cortex = SensoryCortex()
         self.long_term_memory = LongTermMemory()
         self.associative_engine = AssociativeEngine(self.long_term_memory)
+        self.introspection_engine = IntrospectionEngine()
         print("Engine components initialized.")
 
     def add_memory(self, entry: Entry):
@@ -44,7 +46,13 @@ class MetacognitiveEngine:
                 print(f"  - [Similarity: {1 - score:.4f}] '{content}' (Distance: {score:.4f})")
         else:
             print("Association Engine found no relevant memories.")
-            
+        
+        # 3. Introspection
+        print("Introspection: Reflecting on new information...")
+        new_thought = self.introspection_engine.analyze(text_input, associations)
+        if new_thought:
+            self.add_memory(new_thought)
+
         print("--- Cognitive Cycle Finished ---")
 
 # A simple demonstration

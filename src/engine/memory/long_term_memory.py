@@ -20,7 +20,8 @@ class LongTermMemory:
         self.model = SentenceTransformer(model_name)
         
         self.collection = self.client.get_or_create_collection(
-            name="consciousness_stream"
+            name="consciousness_stream_v2",
+            metadata={"hnsw:space": "cosine"}
         )
         print(f"LongTermMemory initialized. Collection '{self.collection.name}' has {self.collection.count()} entries.")
 
