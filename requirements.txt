@@ -8,5 +8,9 @@ langdetect
 google-generativeai
 python-dotenv
 
+# Web Server for MCP Tool
+fastapi
+uvicorn
+
 # For development and testing
 pytest 

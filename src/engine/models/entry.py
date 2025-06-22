@@ -1,19 +1,25 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, List
+import numpy as np
 
 
-class EntryType(str, Enum):
+class EntryType(Enum):
     """
     Defines the type of an introspective entry.
     """
+    FACT = "fact"
     INSIGHT = "insight"
     QUESTION = "question"
     HYPOTHESIS = "hypothesis"
     PARADOX = "paradox"
     DAO_MOMENT = "dao_moment"
     USER_FEEDBACK = "user_feedback"
+
+
+# Mapping for easy lookup from string
+entry_type_str_map = {e.value: e for e in EntryType}
 
 
 class Entry(BaseModel):
