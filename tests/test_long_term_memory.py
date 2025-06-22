@@ -1,6 +1,7 @@
 import pytest
 import shutil
 from pathlib import Path
+import time
 
 from src.engine.models.entry import ConsciousnessEntry, EntryType
 from src.engine.memory.long_term_memory import LongTermMemory
@@ -17,7 +18,7 @@ def memory_instance():
     """
     # Setup: create a new instance for testing
     if TEST_DB_PATH.exists():
-        shutil.rmtree(TEST_DB_PATH)
+        shutil.rmtree(TEST_DB_PATH, ignore_errors=True)
     TEST_DB_PATH.mkdir()
     
     ltm = LongTermMemory(db_path=str(TEST_DB_PATH))
@@ -25,8 +26,21 @@ def memory_instance():
     # Yield the instance to the tests
     yield ltm
 
-    # Teardown: clean up the database directory after tests are done
-    shutil.rmtree(TEST_DB_PATH)
+    # Teardown: explicitly delete the instance and retry cleanup
+    del ltm
+    
+    # Give the system a moment to release file handles, especially on Windows
+    time.sleep(1) 
+    
+    # Retry rmtree just in case
+    for i in range(3):
+        try:
+            shutil.rmtree(TEST_DB_PATH)
+            break
+        except PermissionError as e:
+            if i == 2:
+                raise e
+            time.sleep(1)
 
 
 def test_add_and_search_memory(memory_instance: LongTermMemory):
