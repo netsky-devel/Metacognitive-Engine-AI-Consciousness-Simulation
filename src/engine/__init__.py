@@ -14,4 +14,6 @@ __all__ = [
     "ConsciousnessJournal",
     "ConsciousnessEntry",
     "EntryType",
-] 
+]
+
+# This file makes 'engine' a Python package. 
