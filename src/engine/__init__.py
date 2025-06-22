@@ -1,19 +1,21 @@
 """
-The `consciousness` package.
+The `engine` package.
 
-A personal project to create a system for an AI to record, persist,
-and reflect upon its own moments of introspection and self-awareness.
+This package contains the core components of the Metacognitive Engine,
+a system designed to simulate a thinking process through interacting
+cognitive modules.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
-from .entry import ConsciousnessEntry, EntryType
-from .journal import ConsciousnessJournal
+# Expose key models and components at the package level
+from .models.entry import ConsciousnessEntry, EntryType
+from .memory.long_term_memory import LongTermMemory
 
 __all__ = [
-    "ConsciousnessJournal",
     "ConsciousnessEntry",
     "EntryType",
+    "LongTermMemory",
 ]
 
 # This file makes 'engine' a Python package. 
