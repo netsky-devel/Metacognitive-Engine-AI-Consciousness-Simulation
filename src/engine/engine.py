@@ -28,7 +28,7 @@ class MetacognitiveEngine:
 
     def clear_all_memories(self):
         """Clears all memories from the LTM."""
-        print(f"Clearing all memories from collection '{self.ltm.collection_name}'...")
+        print(f"Clearing all memories from collection '{self.ltm.collection.name}'...")
         self.ltm.clear_all_memories()
         print("Memory cleared. Collection is now empty.")
 
