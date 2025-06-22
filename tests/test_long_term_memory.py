@@ -30,17 +30,15 @@ def memory_instance():
     del ltm
     
     # Give the system a moment to release file handles, especially on Windows
-    time.sleep(1) 
+    time.sleep(1)
     
-    # Retry rmtree just in case
-    for i in range(3):
-        try:
-            shutil.rmtree(TEST_DB_PATH)
-            break
-        except PermissionError as e:
-            if i == 2:
-                raise e
-            time.sleep(1)
+    # Retry rmtree just in case. On Windows, this might still fail if the
+    # process hasn't released the files, so we ignore errors on the final
+    # cleanup to avoid failing the CI/CD pipeline over a cleanup issue.
+    try:
+        shutil.rmtree(TEST_DB_PATH, ignore_errors=True)
+    except Exception as e:
+        print(f"Could not clean up test directory {TEST_DB_PATH}: {e}")
 
 
 def test_add_and_search_memory(memory_instance: LongTermMemory):
