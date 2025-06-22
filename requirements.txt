@@ -1,0 +1,7 @@
+# Core NLP and Vector Search
+spacy
+sentence-transformers
+chromadb
+
+# For development and testing
+pytest 
