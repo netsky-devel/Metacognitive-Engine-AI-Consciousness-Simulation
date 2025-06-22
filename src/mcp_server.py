@@ -8,12 +8,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-# Set the path before importing our engine modules
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# The command `python -m uvicorn src.mcp_server:app` is run from the project root,
+# so the root is already in sys.path. We need to use absolute imports starting from `src`.
 
-from engine.engine import MetacognitiveEngine
-from engine.models.entry import Entry, EntryType, entry_type_str_map
+from src.engine.engine import MetacognitiveEngine
+from src.engine.models.entry import Entry, EntryType, entry_type_str_map
 
 # --- Data Models for API ---
 
