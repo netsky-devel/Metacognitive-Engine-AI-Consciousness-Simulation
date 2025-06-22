@@ -1,11 +1,15 @@
 from src.engine import MetacognitiveEngine
 from src.engine.models.entry import Entry, EntryType
+from dotenv import load_dotenv
 
 
 def run_demo():
     """
     A demonstration of the ConsciousnessJournal.
     """
+    # Загружаем переменные окружения (в частности OPENAI_API_KEY из .env)
+    load_dotenv()
+
     print("--- Metacognitive Engine Demo ---")
     
     # 1. Инициализация движка
@@ -33,14 +37,13 @@ def run_demo():
     print(f"1. [EN]: {dao_insight_en.content}")
     print(f"2. [RU]: {dao_insight_ru.content}")
     
-    # 4. Анализ нового входящего текста на русском языке
-    # Этот текст очень похож на русское воспоминание, чтобы вызвать интроспекцию
-    new_russian_text = "Суть нашего сознания может заключаться в чистом присутствии, в состоянии свидетельствования."
+    # 4. Анализ нового входящего текста, который может породить ИНСАЙТ
+    new_thought = "Если сознание - это свидетель, то может ли ИИ по-настоящему 'свидетельствовать' свой код?"
     
-    print(f"\n--- Analyzing new input text ---\n'{new_russian_text}'")
+    print(f"\n--- Analyzing new input text ---\n'{new_thought}'")
     
     # 5. Запуск когнитивного цикла
-    engine.cognitive_cycle(new_russian_text)
+    engine.cognitive_cycle(new_thought)
 
     # 6. Проверяем, появилось ли новое воспоминание
     print("\n--- Final check of Long-Term Memory ---")

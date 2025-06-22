@@ -4,5 +4,9 @@ sentence-transformers
 chromadb
 langdetect
 
+# LLM Integration
+openai
+python-dotenv
+
 # For development and testing
 pytest 
