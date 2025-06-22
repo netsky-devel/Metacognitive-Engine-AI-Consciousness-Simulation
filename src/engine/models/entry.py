@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum, auto
 import uuid
 
@@ -25,7 +25,7 @@ class ConsciousnessEntry:
     content: str
     context: str
     entry_type: EntryType
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def __str__(self):
