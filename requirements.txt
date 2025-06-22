@@ -5,7 +5,7 @@ chromadb
 langdetect
 
 # LLM Integration
-openai
+google-generativeai
 python-dotenv
 
 # For development and testing

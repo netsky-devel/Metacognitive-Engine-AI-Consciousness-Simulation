@@ -8,3 +8,4 @@ __pycache__/
 
 # Metacognitive Engine Data
 data/ 
+.env
