@@ -2,6 +2,7 @@
 spacy
 sentence-transformers
 chromadb
+langdetect
 
 # For development and testing
 pytest 

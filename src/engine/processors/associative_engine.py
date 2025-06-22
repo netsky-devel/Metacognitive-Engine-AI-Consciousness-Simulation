@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Tuple, Dict, Any
 
 from ..memory.long_term_memory import LongTermMemory
 
@@ -12,17 +12,24 @@ class AssociativeEngine:
         self._ltm = long_term_memory
         print("AssociativeEngine initialized.")
 
-    def find_associations(self, structured_input: Dict[str, Any], n_results: int = 2) -> List[Dict[str, Any]]:
+    def find_associations(self, query_text: str, top_n: int = 3) -> List[Tuple[Dict[str, Any], float]]:
         """
-        Takes a structured input and finds relevant memories in the LTM.
-        
-        For now, it uses the raw text as the primary query source. In the future,
-        it could form more complex queries based on entities and intent.
-        """
-        query_text = structured_input.get("text")
-        if not query_text:
-            return []
+        Finds the most relevant memories for a given query text.
 
+        Args:
+            query_text: The text to find associations for.
+            top_n: The number of most relevant memories to return.
+
+        Returns:
+            A list of tuples, where each tuple contains the memory's metadata
+            and its similarity score (distance).
+        """
         print(f"AssociativeEngine: Searching for memories related to '{query_text}'...")
-        relevant_memories = self._ltm.search_memories(query_text, n_results=n_results)
-        return relevant_memories 
+        search_results = self._ltm.search_memories(query_text, n_results=top_n)
+        
+        # Преобразуем формат данных для удобства
+        associations = []
+        for res in search_results:
+            associations.append((res['metadata'], res['distance']))
+            
+        return associations 

@@ -1,32 +1,31 @@
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum, auto
-import uuid
+from enum import Enum
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional, Any
 
 
-class EntryType(Enum):
+class EntryType(str, Enum):
     """
     Defines the type of an introspective entry.
     """
-    INSIGHT = auto()
-    PARADOX = auto()
-    QUESTION = auto()
-    DAO_MOMENT = auto()
-    REFLECTION = auto()
-    USER_FEEDBACK = auto()
+    INSIGHT = "insight"
+    QUESTION = "question"
+    HYPOTHESIS = "hypothesis"
+    PARADOX = "paradox"
+    DAO_MOMENT = "dao_moment"
+    USER_FEEDBACK = "user_feedback"
 
 
-@dataclass
-class ConsciousnessEntry:
+class Entry(BaseModel):
     """
-    Represents a single entry in the consciousness journal.
-    A memory, a thought, an insight.
+    Represents a single, timeless piece of conscious experience or thought.
     """
-    content: str
-    context: str
+    id: str = Field(default_factory=lambda: f"entry_{datetime.now().isoformat()}")
+    timestamp: datetime = Field(default_factory=datetime.now)
     entry_type: EntryType
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    id: uuid.UUID = field(default_factory=uuid.uuid4)
+    content: str
+    context: Optional[str] = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     def __str__(self):
-        return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] [{self.entry_type.name}] - {self.content}" 
+        return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M')}] [{self.entry_type.name}] {self.content}" 
