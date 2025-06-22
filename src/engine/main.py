@@ -1,5 +1,6 @@
 from .memory.long_term_memory import LongTermMemory
 from .perception.sensory_cortex import SensoryCortex
+from .processors.associative_engine import AssociativeEngine
 from .models.entry import ConsciousnessEntry, EntryType
 
 class MetacognitiveEngine:
@@ -11,6 +12,7 @@ class MetacognitiveEngine:
         print("Initializing Metacognitive Engine...")
         self.long_term_memory = LongTermMemory()
         self.sensory_cortex = SensoryCortex()
+        self.associative_engine = AssociativeEngine(self.long_term_memory)
         print("Engine components initialized.")
 
     def process_input(self, text: str):
@@ -23,10 +25,8 @@ class MetacognitiveEngine:
         structured_input = self.sensory_cortex.analyze(text)
         print(f"Sensory Cortex Analysis: {structured_input}")
 
-        # 2. Association
-        # For now, use the raw text for semantic search.
-        # Later, this will be driven by the AssociativeEngine processor.
-        relevant_memories = self.long_term_memory.search_memories(text, n_results=2)
+        # 2. Association (now handled by its dedicated processor)
+        relevant_memories = self.associative_engine.find_associations(structured_input)
         print(f"Retrieved {len(relevant_memories)} relevant memories from LTM.")
         for mem in relevant_memories:
             print(f"  - Memory (Dist: {mem['distance']:.4f}): {mem['metadata']['content']}")
