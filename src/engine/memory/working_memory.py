@@ -51,6 +51,7 @@ class WorkingMemory:
         self.cognitive_state: CognitiveState = CognitiveState()
         self.associations: List[Dict[str, Any]] = []
         self.context_tags: List[str] = []
+        self.context_data: Dict[str, Any] = {}  # For storing processor-specific context
         
         print("WorkingMemory initialized - cognitive workspace ready.")
     
@@ -61,6 +62,7 @@ class WorkingMemory:
         self.generated_insights.clear()
         self.associations.clear()
         self.context_tags.clear()
+        self.context_data.clear()
         self.cognitive_state = CognitiveState()
         print("WorkingMemory cleared.")
     
@@ -122,6 +124,27 @@ class WorkingMemory:
             "valence": self.cognitive_state.emotional_state.valence,
             "arousal": self.cognitive_state.emotional_state.arousal
         }
+    
+    def set_context_data(self, key: str, data: Any):
+        """Set processor-specific context data."""
+        self.context_data[key] = data
+        self.cognitive_state.last_update = datetime.now()
+    
+    def get_context_data(self, key: str, default: Any = None) -> Any:
+        """Get processor-specific context data."""
+        return self.context_data.get(key, default)
+    
+    def get_structured_input(self) -> Optional[StructuredInput]:
+        """Get the current structured input."""
+        return self.structured_input
+    
+    def get_retrieved_memories(self) -> List[Entry]:
+        """Get retrieved memories."""
+        return self.retrieved_memories
+    
+    def get_generated_insights(self) -> List[Entry]:
+        """Get generated insights."""
+        return self.generated_insights
     
     def get_context_summary(self) -> str:
         """Get a summary of the current context for processing."""

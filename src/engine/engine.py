@@ -4,6 +4,7 @@ from src.engine.processors.associative_engine import AssociativeEngine
 from src.engine.processors.introspection_engine import IntrospectionEngine
 from src.engine.processors.response_generator import ResponseGenerator
 from src.engine.processors.emotional_engine import EmotionalEngine
+from src.engine.processors.attention_engine import AttentionEngine
 from src.engine.perception.sensory_cortex import SensoryCortex
 from src.engine.models.entry import Entry
 
@@ -13,7 +14,7 @@ class MetacognitiveEngine:
     This class initializes and integrates all cognitive components,
     and orchestrates the complex cognitive cycle through WorkingMemory.
     """
-    def __init__(self, enable_emotions: bool = True):
+    def __init__(self, enable_emotions: bool = True, enable_attention: bool = True):
         print("Initializing Advanced Metacognitive Engine...")
         
         # Core memory systems
@@ -26,14 +27,22 @@ class MetacognitiveEngine:
         self.introspection_engine = IntrospectionEngine()
         self.response_generator = ResponseGenerator()
         
-        # Emotional processing system
+        # Advanced processing systems
         self.emotional_engine = EmotionalEngine() if enable_emotions else None
+        self.attention_engine = AttentionEngine() if enable_attention else None
         self.emotions_enabled = enable_emotions
+        self.attention_enabled = enable_attention
         
+        features = []
         if enable_emotions:
-            print("Advanced Engine components initialized with emotional processing.")
+            features.append("emotional processing")
+        if enable_attention:
+            features.append("attention mechanism")
+        
+        if features:
+            print(f"Advanced Engine components initialized with {' and '.join(features)}.")
         else:
-            print("Advanced Engine components initialized without emotional processing.")
+            print("Advanced Engine components initialized in basic mode.")
 
     def add_memory(self, entry: Entry):
         """Adds a new entry directly to long-term memory."""
@@ -81,6 +90,11 @@ class MetacognitiveEngine:
         for cycle in range(max_cycles):
             print(f"\n🔄 CYCLE {cycle + 1}/{max_cycles}")
             self.working_memory.update_cognitive_state(cycle_count=cycle + 1)
+            
+            # Attention allocation phase (NEW)
+            if self.attention_enabled and self.attention_engine:
+                print("  🎯 Attention Phase")
+                self.attention_engine.process(self.working_memory)
             
             # Association phase
             print("  🔗 Association Phase")

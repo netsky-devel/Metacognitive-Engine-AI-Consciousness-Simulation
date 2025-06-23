@@ -3,4 +3,5 @@
 from .associative_engine import AssociativeEngine
 from .introspection_engine import IntrospectionEngine
 from .response_generator import ResponseGenerator
-from .emotional_engine import EmotionalEngine 
+from .emotional_engine import EmotionalEngine
+from .attention_engine import AttentionEngine 
