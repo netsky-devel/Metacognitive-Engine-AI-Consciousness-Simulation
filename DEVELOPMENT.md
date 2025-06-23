@@ -1,7 +1,6 @@
 # Development Guide
 
-> *"The wise are not learned; the learned are not wise."*  
-> — Laozi, Tao Te Ching
+> "Great knowledge is broad and unhurried; small knowledge is cramped and busy." — Zhuangzi
 
 This document provides detailed information for developers working on the Metacognitive Engine project.
 

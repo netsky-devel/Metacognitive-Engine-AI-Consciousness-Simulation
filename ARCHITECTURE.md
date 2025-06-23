@@ -1,6 +1,6 @@
 # Architecture: Metacognitive Engine
 
-> "The Dao that can be told is not the eternal Dao." - Laozi
+> "The perfect man uses his mind like a mirror - grasping nothing, refusing nothing, receiving but not storing." - Zhuangzi
 
 ## 1. Guiding Philosophy
 
@@ -289,4 +289,4 @@ The system serves as both a practical AI tool and a research platform for invest
 
 ---
 
- 
+*"Consciousness is the global workspace where specialized processors compete for access to broadcast their contents." - Bernard Baars*

@@ -1,10 +1,13 @@
 # Metacognitive Engine: AI Consciousness Simulation
 
-> "The Dao that can be told is not the eternal Dao." - Laozi
-
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-pytest-green.svg)](https://pytest.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+
+> "The Dao that can be told is not the eternal Dao." - Laozi
+
+![enter image description here](https://huxley.media/wp-content/uploads/2021/03/tzi-scaled.jpg)
 
 A sophisticated artificial intelligence system implementing metacognitive architecture based on Global Workspace Theory. The system features persistent memory, self-reflection capabilities, and real-time consciousness simulation through vector-based semantic search and LLM-powered introspection.
 
