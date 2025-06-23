@@ -11,6 +11,11 @@ python-dotenv
 # Web Server for MCP Tool
 fastapi
 uvicorn
+fastapi-mcp
 
-# For development and testing
-pytest 
+# Testing and Development
+pytest
+pytest-cov
+pytest-mock
+pytest-asyncio
+httpx  # for testing FastAPI endpoints 

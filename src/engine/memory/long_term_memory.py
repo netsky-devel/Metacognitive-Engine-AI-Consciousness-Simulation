@@ -87,6 +87,10 @@ class LongTermMemory:
             
             print(f"LongTermMemory: Raw query returned {len(results.get('ids', [{}])[0]) if results.get('ids') else 0} results")
 
+            # Use distance threshold instead of similarity threshold
+            # Lower distance = more similar. Set max distance threshold
+            max_distance = 8.0 if similarity_threshold is None else 8.0  # Increased threshold for better recall
+            
             # The result from chromadb is a dictionary of lists. Let's reformat it.
             memories = []
             if results['ids'][0]:
@@ -100,10 +104,6 @@ class LongTermMemory:
                     similarity_score = max(0, 1 - distance/2) if distance <= 2 else 0
                     
                     print(f"LongTermMemory: Result {i}: distance={distance:.4f}, similarity_score={similarity_score:.4f}")
-                    
-                    # Use distance threshold instead of similarity threshold
-                    # Lower distance = more similar. Set max distance threshold
-                    max_distance = 8.0 if similarity_threshold is None else 8.0  # Increased threshold for better recall
                     
                     if distance <= max_distance:
                         memory = {

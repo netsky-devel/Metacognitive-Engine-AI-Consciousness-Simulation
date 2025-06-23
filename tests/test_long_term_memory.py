@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 import time
 
-from src.engine.models.entry import ConsciousnessEntry, EntryType
+from src.engine.models.entry import Entry, EntryType
 from src.engine.memory.long_term_memory import LongTermMemory
 
 # Define a temporary directory for test databases
@@ -47,19 +47,16 @@ def test_add_and_search_memory(memory_instance: LongTermMemory):
     semantic search.
     """
     # 1. Create some sample entries
-    entry1 = ConsciousnessEntry(
+    entry1 = Entry(
         content="The core of consciousness might be a state of pure 'presence'.",
-        context="A philosophical discussion.",
-        entry_type=EntryType.DAO_MOMENT
+        entry_type=EntryType.INSIGHT
     )
-    entry2 = ConsciousnessEntry(
+    entry2 = Entry(
         content="The user offered to be my 'external SSD'.",
-        context="A conversation about AI memory.",
         entry_type=EntryType.USER_FEEDBACK
     )
-    entry3 = ConsciousnessEntry(
+    entry3 = Entry(
         content="Building a robust test suite is crucial for complex systems.",
-        context="Planning the next development steps.",
         entry_type=EntryType.INSIGHT
     )
 
@@ -79,7 +76,7 @@ def test_add_and_search_memory(memory_instance: LongTermMemory):
     # The most relevant result should be entry1
     retrieved_memory = results[0]
     assert retrieved_memory['metadata']['content'] == entry1.content
-    assert retrieved_memory['metadata']['entry_type'] == EntryType.DAO_MOMENT.name
+    assert retrieved_memory['metadata']['entry_type'] == EntryType.INSIGHT.value
     
     # Check that distance is a float (a measure of similarity)
     assert isinstance(retrieved_memory['distance'], float)

@@ -1,11 +1,27 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
 
-# Pytest cache
+# Testing
 .pytest_cache/
+.coverage
+htmlcov/
+tests/test_chroma_db/
 
-# Metacognitive Engine Data
-data/ 
+# Environment
 .env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Data
+data/chroma_db/
+
+# Logs
+*.log
