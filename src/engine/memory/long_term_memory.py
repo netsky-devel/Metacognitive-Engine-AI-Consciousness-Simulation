@@ -69,15 +69,23 @@ class LongTermMemory:
             List of dictionaries with memory metadata and similarity scores
         """
         if not query_text.strip():
+            print("LongTermMemory: Empty query text")
             return []
         
         try:
+            print(f"LongTermMemory: Searching for '{query_text}' with threshold {similarity_threshold}")
             query_embedding = self.model.encode([query_text])[0].tolist()
+            print(f"LongTermMemory: Generated embedding of size {len(query_embedding)}")
+            
+            collection_count = self.collection.count()
+            print(f"LongTermMemory: Collection has {collection_count} entries")
             
             results = self.collection.query(
                 query_embeddings=[query_embedding],
                 n_results=min(n_results, 50)  # Limit max results for performance
             )
+            
+            print(f"LongTermMemory: Raw query returned {len(results.get('ids', [{}])[0]) if results.get('ids') else 0} results")
 
             # The result from chromadb is a dictionary of lists. Let's reformat it.
             memories = []
@@ -85,6 +93,8 @@ class LongTermMemory:
                 for i in range(len(results['ids'][0])):
                     distance = results['distances'][0][i]
                     similarity = 1 - distance
+                    
+                    print(f"LongTermMemory: Result {i}: distance={distance:.4f}, similarity={similarity:.4f}")
                     
                     # Filter by similarity threshold
                     if similarity >= similarity_threshold:
@@ -95,6 +105,9 @@ class LongTermMemory:
                             "metadata": results['metadatas'][0][i]
                         }
                         memories.append(memory)
+                        print(f"LongTermMemory: Accepted memory: {memory['metadata'].get('content', '')[:50]}...")
+                    else:
+                        print(f"LongTermMemory: Rejected memory due to low similarity ({similarity:.4f} < {similarity_threshold})")
 
             # Sort by similarity (highest first)
             memories.sort(key=lambda x: x['similarity'], reverse=True)
@@ -104,6 +117,8 @@ class LongTermMemory:
             
         except Exception as e:
             print(f"ERROR: Memory search failed: {e}")
+            import traceback
+            traceback.print_exc()
             return []
 
     def query(self, query_text: str, n_results: int = 5) -> List[Entry]:
