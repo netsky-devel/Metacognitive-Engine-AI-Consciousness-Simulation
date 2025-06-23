@@ -56,7 +56,7 @@ class LongTermMemory:
         )
         print(f"Added memory to LTM: {entry}")
 
-    def search_memories(self, query_text: str, n_results: int = 5, similarity_threshold: float = 0.5) -> List[Dict[str, Any]]:
+    def search_memories(self, query_text: str, n_results: int = 5, similarity_threshold: float = 0.1) -> List[Dict[str, Any]]:
         """
         Searches for memories semantically similar to the query text.
         
@@ -117,7 +117,7 @@ class LongTermMemory:
         Returns:
             List of Entry objects
         """
-        search_results = self.search_memories(query_text, n_results)
+        search_results = self.search_memories(query_text, n_results, similarity_threshold=0.0)
         
         entries = []
         for result in search_results:

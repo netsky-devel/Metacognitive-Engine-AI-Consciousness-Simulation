@@ -34,8 +34,8 @@ class AssociativeEngine:
         
         print(f"AssociativeEngine: Processing input '{query_text[:50]}...'")
         
-        # Find associations
-        associations = self.find_associations(query_text)
+        # Find associations with lower threshold for better recall
+        associations = self.find_associations(query_text, top_n=5)
         
         if associations:
             # Convert association metadata back to Entry objects for working memory
@@ -96,11 +96,15 @@ class AssociativeEngine:
             and its similarity score (distance).
         """
         print(f"AssociativeEngine: Searching for memories related to '{query_text}'...")
-        search_results = self._ltm.search_memories(query_text, n_results=top_n)
+        # Use very low threshold to find any relevant memories
+        search_results = self._ltm.search_memories(query_text, n_results=top_n, similarity_threshold=0.0)
+        
+        print(f"AssociativeEngine: Found {len(search_results)} raw search results")
         
         # Преобразуем формат данных для удобства
         associations = []
         for res in search_results:
             associations.append((res['metadata'], res['distance']))
+            print(f"  Association: '{res['metadata']['content'][:50]}...' (similarity: {res.get('similarity', 0):.3f})")
             
         return associations 

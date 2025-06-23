@@ -41,11 +41,22 @@ class IntrospectionEngine:
         # Perform multiple types of introspective analysis
         insights_generated = 0
         
+        print(f"IntrospectionEngine: Retrieved memories count: {len(working_memory.retrieved_memories)}")
+        
         # 1. Analyze input against retrieved memories
         if working_memory.retrieved_memories:
+            print("IntrospectionEngine: Analyzing with memories...")
             memory_insight = self._analyze_with_memories(working_memory)
             if memory_insight:
                 working_memory.add_insight(memory_insight)
+                insights_generated += 1
+                print(f"IntrospectionEngine: Generated memory insight: {memory_insight.entry_type.name}")
+        else:
+            print("IntrospectionEngine: No retrieved memories, trying simple analysis...")
+            # Generate a simple insight even without memories
+            simple_insight = self._generate_simple_insight(working_memory)
+            if simple_insight:
+                working_memory.add_insight(simple_insight)
                 insights_generated += 1
         
         # 2. Detect paradoxes in the current context
@@ -183,6 +194,40 @@ class IntrospectionEngine:
             )
         
         return None
+
+    def _generate_simple_insight(self, working_memory: WorkingMemory) -> Optional[Entry]:
+        """Generate simple insight when no memories are available."""
+        input_data = working_memory.structured_input
+        
+        if not input_data:
+            return None
+        
+        # Generate insight based on input intent and sentiment
+        if input_data.intent == 'QUESTION':
+            return Entry(
+                entry_type=EntryType.INSIGHT,
+                content=f"This question about '{input_data.raw_text[:50]}...' explores important aspects that deserve deeper consideration.",
+                context="Simple insight generation"
+            )
+        elif input_data.intent == 'REFLECTION':
+            return Entry(
+                entry_type=EntryType.QUESTION,
+                content=f"What deeper implications might this reflection have for understanding the topic?",
+                context="Generated from reflection"
+            )
+        elif input_data.sentiment == 'CURIOUS':
+            return Entry(
+                entry_type=EntryType.INSIGHT,
+                content=f"This curiosity-driven inquiry opens pathways for exploration and learning.",
+                context="Curiosity-based insight"
+            )
+        
+        # Default insight
+        return Entry(
+            entry_type=EntryType.INSIGHT,
+            content=f"This input ({input_data.intent}, {input_data.sentiment}) provides valuable information for processing.",
+            context="Default simple insight"
+        )
 
     def _create_memory_analysis_prompt(self, original_text: str, associated_content: str) -> str:
         return f"""

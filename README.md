@@ -115,7 +115,7 @@ python -m spacy download ru_core_news_sm
 
 Start the server:
 ```bash
-python src/mcp_server.py
+python -m uvicorn src.mcp_server:app  
 ```
 
 Use the advanced processing endpoint:
