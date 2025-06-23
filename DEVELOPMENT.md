@@ -1,5 +1,8 @@
 # Development Guide
 
+> *"The wise are not learned; the learned are not wise."*  
+> — Laozi, Tao Te Ching
+
 This document provides detailed information for developers working on the Metacognitive Engine project.
 
 ## 🏗️ Development Setup
