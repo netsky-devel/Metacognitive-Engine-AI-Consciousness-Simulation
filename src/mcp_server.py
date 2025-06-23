@@ -1,18 +1,32 @@
 """
 This module implements a FastAPI server to expose the MetacognitiveEngine
 as a web service, allowing it to be used as a proper MCP Tool in Cursor.
+
+This version uses the `fastapi-mcp` library to correctly handle the
+MCP protocol that Cursor expects.
 """
 
 import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
+from datetime import datetime
 
-# The command `python -m uvicorn src.mcp_server:app` is run from the project root,
-# so the root is already in sys.path. We need to use absolute imports starting from `src`.
+# Load environment variables from .env file before anything else
+load_dotenv()
 
 from src.engine.engine import MetacognitiveEngine
 from src.engine.models.entry import Entry, EntryType, entry_type_str_map
+from fastapi_mcp import FastApiMCP
+
+# --- FastAPI Application ---
+# We define our app and endpoints as usual
+app = FastAPI(
+    title="Metacognitive Processor (MCP)",
+    description="A server for the AI's long-term, reflective memory.",
+    version="1.0.0"
+)
 
 # --- Data Models for API ---
 
@@ -32,7 +46,6 @@ class EntryResponse(BaseModel):
     timestamp: str
     type: str
     content: str
-    embedding: Optional[List[float]] = None
 
     @classmethod
     def from_entry(cls, entry: Entry):
@@ -40,27 +53,12 @@ class EntryResponse(BaseModel):
             id=entry.id,
             timestamp=entry.timestamp.isoformat(),
             type=entry.entry_type.name,
-            content=entry.content,
-            embedding=entry.embedding
+            content=entry.content
         )
 
-# --- FastAPI Application ---
+# --- Tool Endpoints ---
 
-app = FastAPI(
-    title="Metacognitive Processor (MCP)",
-    description="A server for the AI's long-term, reflective memory.",
-    version="1.0.0"
-)
-
-# Initialize the engine once on startup
-engine = MetacognitiveEngine()
-
-@app.get("/", summary="Health Check")
-def read_root():
-    """A simple health check endpoint."""
-    return {"status": "Metacognitive Engine is running."}
-
-@app.post("/add", response_model=EntryResponse, summary="Add a new memory")
+@app.post("/add", response_model=EntryResponse, summary="Add a new memory", operation_id="add_memory")
 def add_memory(request: AddRequest):
     """Directly adds a new entry to the long-term memory."""
     try:
@@ -74,7 +72,7 @@ def add_memory(request: AddRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/query", response_model=List[EntryResponse], summary="Query for similar memories")
+@app.post("/query", response_model=List[EntryResponse], summary="Query for similar memories", operation_id="query_memories")
 def query_memories(request: QueryRequest):
     """Finds and returns the most similar memories to a given text query."""
     try:
@@ -83,7 +81,7 @@ def query_memories(request: QueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/reflect", response_model=List[EntryResponse], summary="Reflect on a new thought")
+@app.post("/reflect", response_model=List[EntryResponse], summary="Reflect on a new thought", operation_id="reflect_on_thought")
 def reflect_on_thought(request: ReflectRequest):
     """
     Analyzes a new thought, finds associations, generates insights via LLM,
@@ -95,20 +93,61 @@ def reflect_on_thought(request: ReflectRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/list", response_model=List[EntryResponse], summary="List all memories")
+@app.post("/process", summary="Advanced cognitive processing", operation_id="process_thought")
+def process_thought(request: ReflectRequest):
+    """
+    Performs advanced multi-cycle cognitive processing and returns a synthesized response.
+    This is the new enhanced processing method that uses the full WorkingMemory architecture.
+    """
+    try:
+        response = engine.process_thought(request.content)
+        return {"response": response, "status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/list", response_model=List[EntryResponse], summary="List all memories", operation_id="list_all_memories")
 def list_all_memories():
     """Returns all entries currently in the long-term memory."""
     try:
-        all_entries = engine.ltm.get_all()
+        # Corrected method call: search_memories without a query is not supported,
+        # so we need a different approach. For now, let's just get the raw collection data.
+        all_entries_raw = engine.ltm.collection.get() # Get all raw data
+        
+        # Manually construct Entry objects from the raw metadata
+        all_entries = []
+        for i, entry_id in enumerate(all_entries_raw['ids']):
+            meta = all_entries_raw['metadatas'][i]
+            entry = Entry(
+                id=entry_id,
+                content=meta.get('content'),
+                entry_type=entry_type_str_map.get(meta.get('entry_type')),
+                timestamp=datetime.fromisoformat(meta.get('timestamp'))
+            )
+            all_entries.append(entry)
+
         return [EntryResponse.from_entry(entry) for entry in all_entries]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/clear", summary="Clear all memories")
+@app.post("/clear", summary="Clear all memories", operation_id="clear_all_memories")
 def clear_all_memories():
     """Deletes all entries from the long-term memory."""
     try:
         engine.clear_all_memories()
         return {"status": "All memories have been cleared."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- Server Initialization ---
+
+# Initialize the engine once
+engine = MetacognitiveEngine()
+
+# Create and mount the MCP server using the library
+mcp = FastApiMCP(app)
+mcp.mount()
+
+# Main entry point for running with uvicorn
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("mcp_server:app", host="127.0.0.1", port=8000, reload=True) 
