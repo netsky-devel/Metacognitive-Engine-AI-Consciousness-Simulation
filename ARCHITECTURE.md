@@ -14,9 +14,10 @@ The architecture moves beyond basic archival to create a dynamic model of thinki
 graph TB
     A[Input Text] --> B[SensoryCortex]
     B --> C[WorkingMemory]
-    C --> D[AssociativeEngine]
-    C --> E[IntrospectionEngine]
-    C --> N[EmotionalEngine]
+    C --> M[AttentionEngine]
+    M --> D[AssociativeEngine]
+    M --> E[IntrospectionEngine]
+    M --> N[EmotionalEngine]
     D --> F[LongTermMemory]
     E --> G[ResponseGenerator]
     N --> G
@@ -29,6 +30,7 @@ graph TB
     
     subgraph "Cognitive Cycle"
         C
+        M
         D
         E
         N
@@ -48,6 +50,16 @@ graph TB
         N --> P
         P --> Q
         Q --> C
+    end
+    
+    subgraph "Attention System"
+        M
+        R[AttentionState]
+        S[AttentionFocus]
+        T[AttentionStrategy]
+        M --> R
+        R --> S
+        M --> T
     end
     
     subgraph "Processing Pipeline"
@@ -202,7 +214,57 @@ class EmotionalState:
 4. Create emotional context tags for response generation
 5. Store significant emotional experiences in memory
 
-#### 3.4.4. ResponseGenerator
+#### 3.4.4. AttentionEngine
+**Responsibility:** Dynamically allocate cognitive resources and manage attention focus.
+
+**Technology:** 
+- Strategic attention allocation with 3 distinct strategies
+- Capacity management with automatic rebalancing
+- Context-aware focus generation based on input complexity
+
+**Core Features:**
+- **Dynamic Allocation:** Real-time attention distribution across cognitive tasks
+- **Strategy Management:** Balanced, focused, and exploratory attention patterns
+- **Capacity Tracking:** Monitors and manages cognitive resource usage
+- **Focus Persistence:** Maintains attention state across cognitive cycles
+
+**Attention Model:**
+```python
+class AttentionState:
+    """Manages cognitive attention allocation"""
+    capacity: float                    # Total attention capacity (0.0-1.0)
+    focuses: List[AttentionFocus]      # Active attention focuses
+    strategy: AttentionStrategy        # Current allocation strategy
+    
+class AttentionFocus:
+    """Individual attention focus"""
+    focus_type: AttentionType          # Type of cognitive task
+    weight: float                      # Attention weight (0.0-1.0)
+    priority: AttentionPriority        # Processing priority
+    duration: float                    # Focus duration in seconds
+    created_at: datetime               # When focus was created
+```
+
+**Attention Types:**
+- **MEMORY_SEARCH**: Focus on retrieving relevant memories
+- **INSIGHT_GENERATION**: Concentrate on generating new insights
+- **EMOTIONAL_PROCESSING**: Attention to emotional content analysis
+- **RESPONSE_GENERATION**: Focus on coherent response creation
+- **META_COGNITION**: Attention to cognitive process monitoring
+
+**Attention Strategies:**
+- **BALANCED**: Even distribution across all identified needs (25% each)
+- **FOCUSED**: Primary focus (70%) with secondary support (30%)
+- **EXPLORATORY**: Wide exploration across all attention types
+
+**Process Flow:**
+1. Analyze input context to determine attention needs
+2. Allocate attention based on current strategy
+3. Guide cognitive processors with attention weights
+4. Monitor capacity usage and rebalance as needed
+5. Clean up expired focuses and update state
+
+#### 3.4.5. ResponseGenerator
 **Responsibility:** Synthesize emotionally-aware, coherent responses from cognitive processing.
 
 **Technology:** Google Gemini AI with emotion-enhanced context prompting.
@@ -229,20 +291,24 @@ The system implements a sophisticated multi-cycle processing model:
 
 ```python
 def process_thought(self, text: str) -> str:
-    """Advanced multi-cycle cognitive processing with emotional awareness"""
+    """Advanced multi-cycle cognitive processing with attention and emotional awareness"""
     # 1. Perception Phase
     structured_input = self.sensory_cortex.analyze(text)
     self.working_memory.set_input(structured_input)
     
     # 2. Multi-Cycle Processing
     for cycle in range(MAX_CYCLES):
+        # Attention Phase (NEW)
+        if self.attention_engine:
+            self.attention_engine.process_cycle(self.working_memory)
+        
         # Association Phase
         self.associative_engine.process(self.working_memory)
         
         # Introspection Phase  
         self.introspection_engine.process(self.working_memory)
         
-        # Emotional Processing Phase (NEW)
+        # Emotional Processing Phase
         if self.emotional_engine:
             self.emotional_engine.process(self.working_memory)
         
@@ -253,7 +319,7 @@ def process_thought(self, text: str) -> str:
     # 3. Learning Phase
     self._save_insights_to_ltm()
     
-    # 4. Response Generation (now emotionally-aware)
+    # 4. Response Generation (attention and emotionally-aware)
     return self.response_generator.generate_response(self.working_memory)
 ```
 
@@ -320,7 +386,183 @@ def process_thought(self, text: str) -> str:
 - Consistent interface for memory operations
 - Pluggable storage backends (ChromaDB, future alternatives)
 
-## 7. Emotional Architecture (NEW)
+## 7. Attention Architecture (NEW)
+
+### 7.1. Attention Management System
+
+The system implements a sophisticated **attention mechanism** that dynamically allocates cognitive resources across different processing tasks, inspired by human attention and focus management.
+
+```python
+class AttentionEngine:
+    """Core attention management system"""
+    def __init__(self, capacity: float = 1.0, strategy: AttentionStrategy = AttentionStrategy.BALANCED):
+        self.attention_state = AttentionState(capacity=capacity)
+        self.current_strategy = strategy
+        self.focus_history: List[AttentionFocus] = []
+```
+
+**Key Principles:**
+- **Limited Capacity:** Total attention capacity is finite (0.0-1.0)
+- **Dynamic Allocation:** Attention distribution adapts to context
+- **Strategic Processing:** Three distinct attention strategies
+- **Temporal Persistence:** Attention state persists across cognitive cycles
+
+### 7.2. Attention Types and Focus Management
+
+**AttentionType Enumeration:**
+```python
+class AttentionType(Enum):
+    MEMORY_SEARCH = "memory_search"           # Finding relevant memories
+    INSIGHT_GENERATION = "insight_generation" # Creating new insights
+    EMOTIONAL_PROCESSING = "emotional_processing" # Processing emotions
+    RESPONSE_GENERATION = "response_generation"   # Generating responses
+    META_COGNITION = "meta_cognition"         # Monitoring cognition
+```
+
+**AttentionFocus Class:**
+```python
+class AttentionFocus:
+    """Individual attention focus with lifecycle management"""
+    focus_id: str                    # Unique identifier
+    focus_type: AttentionType        # Type of cognitive task
+    weight: float                    # Attention allocation (0.0-1.0)
+    priority: AttentionPriority      # Processing priority
+    duration: float                  # Focus duration in seconds
+    created_at: datetime             # Creation timestamp
+    expires_at: Optional[datetime]   # Expiration time
+    
+    def is_expired(self) -> bool:
+        """Check if focus has expired"""
+        
+    def get_relevance_score(self, context: str) -> float:
+        """Calculate relevance to current context"""
+```
+
+### 7.3. Attention Strategies
+
+**Strategy Pattern Implementation:**
+```python
+class AttentionStrategy(Enum):
+    BALANCED = "balanced"       # Even distribution
+    FOCUSED = "focused"         # Primary focus dominance
+    EXPLORATORY = "exploratory" # Wide exploration
+```
+
+**Strategy Behaviors:**
+
+**BALANCED Strategy:**
+- Distributes attention evenly across identified needs
+- Typically 20-25% per active focus type
+- Best for complex, multi-faceted problems
+- Ensures comprehensive cognitive coverage
+
+**FOCUSED Strategy:**
+- Allocates 70% to primary focus, 30% to secondary
+- Concentrates resources on most important task
+- Best for specific, targeted problems
+- Maximizes depth of processing
+
+**EXPLORATORY Strategy:**
+- Spreads attention widely across all types
+- Encourages discovery of unexpected connections
+- Best for creative and open-ended tasks
+- Maximizes breadth of cognitive exploration
+
+### 7.4. Context-Aware Attention Allocation
+
+**Automatic Focus Generation:**
+```python
+def analyze_attention_needs(self, working_memory: WorkingMemory) -> List[AttentionType]:
+    """Determine attention needs based on context"""
+    needs = []
+    
+    # Always need memory search for associations
+    needs.append(AttentionType.MEMORY_SEARCH)
+    
+    # Complex inputs need more insight generation
+    if self._is_complex_input(working_memory):
+        needs.append(AttentionType.INSIGHT_GENERATION)
+    
+    # Emotional content needs emotional processing
+    if self._has_emotional_content(working_memory):
+        needs.append(AttentionType.EMOTIONAL_PROCESSING)
+    
+    # Always need response generation
+    needs.append(AttentionType.RESPONSE_GENERATION)
+    
+    return needs
+```
+
+**Context Analysis Factors:**
+- **Input Complexity:** Length, entities, linguistic complexity
+- **Memory Count:** Number of retrieved relevant memories
+- **Emotional Content:** Presence of emotional language
+- **Processing History:** Previous cognitive cycles
+- **Confidence Levels:** Uncertainty in current processing
+
+### 7.5. Capacity Management and Rebalancing
+
+**Capacity Tracking:**
+```python
+class AttentionState:
+    def get_usage_percentage(self) -> float:
+        """Calculate current attention usage"""
+        return sum(focus.weight for focus in self.focuses) * 100
+    
+    def rebalance_focuses(self) -> None:
+        """Rebalance attention when over capacity"""
+        if self.get_total_weight() > self.capacity:
+            self._normalize_weights()
+    
+    def cleanup_expired_focuses(self) -> None:
+        """Remove expired attention focuses"""
+        self.focuses = [f for f in self.focuses if not f.is_expired()]
+```
+
+**Rebalancing Strategies:**
+- **Weight Normalization:** Scale down all focuses proportionally
+- **Priority-Based:** Maintain high-priority focuses, reduce low-priority
+- **Age-Based:** Remove oldest focuses when capacity exceeded
+- **Relevance-Based:** Keep most relevant focuses to current context
+
+### 7.6. Attention Guidance System
+
+**Processing Recommendations:**
+```python
+def get_processing_recommendations(self) -> List[str]:
+    """Generate processing guidance based on attention state"""
+    recommendations = []
+    
+    dominant_focus = self.get_dominant_focus()
+    if dominant_focus:
+        if dominant_focus.focus_type == AttentionType.MEMORY_SEARCH:
+            recommendations.append("Focus on finding relevant associations")
+        elif dominant_focus.focus_type == AttentionType.RESPONSE_GENERATION:
+            recommendations.append("Concentrate on crafting coherent responses")
+        # ... additional recommendations
+    
+    return recommendations
+```
+
+**Attention Context Generation:**
+```python
+def get_attention_context(self) -> Dict[str, Any]:
+    """Comprehensive attention state summary"""
+    return {
+        "current_strategy": self.current_strategy.value,
+        "attention_summary": {
+            "total_focuses": len(self.attention_state.focuses),
+            "usage_percentage": self.attention_state.get_usage_percentage(),
+            "dominant_focus": self.attention_state.get_dominant_focus_type()
+        },
+        "attention_guidance": {
+            "processing_recommendations": self.get_processing_recommendations(),
+            "focus_suggestions": self.get_focus_suggestions()
+        }
+    }
+```
+
+## 8. Emotional Architecture
 
 ### 7.1. PAD Emotional Model
 

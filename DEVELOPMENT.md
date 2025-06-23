@@ -60,7 +60,8 @@ Create `.vscode/settings.json`:
 ```
 tests/
 ├── test_comprehensive.py      # All component tests
-├── test_emotional_system.py   # NEW: Emotional processing tests (25 tests)
+├── test_attention_system.py   # NEW: Attention system tests (24 tests)
+├── test_emotional_system.py   # Emotional processing tests (25 tests)
 ├── test_mcp_server.py         # API endpoint tests
 ├── test_long_term_memory.py   # Legacy memory tests
 └── conftest.py               # Shared fixtures
@@ -145,10 +146,11 @@ The system implements Global Workspace Theory through:
    - Can trigger other processors
 
 3. **Attention Mechanism**
+   - AttentionEngine dynamically allocates cognitive resources (NEW)
    - AssociativeEngine focuses on relevant memories
    - IntrospectionEngine analyzes current context
-   - EmotionalEngine processes emotional content (NEW)
-   - ResponseGenerator synthesizes emotionally-aware output
+   - EmotionalEngine processes emotional content
+   - ResponseGenerator synthesizes attention and emotionally-aware output
 
 ### Design Patterns
 
@@ -166,6 +168,12 @@ class LongTermMemory:
 class CognitiveProcessor:
     """Base class for cognitive processing strategies"""
     def process(self, working_memory: WorkingMemory) -> bool: ...
+
+class AttentionStrategy(Enum):
+    """Attention allocation strategies"""
+    BALANCED = "balanced"
+    FOCUSED = "focused"
+    EXPLORATORY = "exploratory"
 ```
 
 #### Observer Pattern
@@ -459,7 +467,205 @@ def calculate_relevance_score(self, memory: EmotionalMemory, current_text: str) 
     return min(1.0, relevance)
 ```
 
+## 🎯 Attention System Development
+
+### Attention Architecture Implementation
+
+The attention system provides dynamic cognitive resource allocation across different processing tasks.
+
+#### Core Components
+
+```python
+class AttentionEngine:
+    """Main attention management system"""
+    def __init__(self, capacity: float = 1.0, strategy: AttentionStrategy = AttentionStrategy.BALANCED):
+        self.attention_state = AttentionState(capacity=capacity)
+        self.current_strategy = strategy
+        self.focus_history: List[AttentionFocus] = []
+    
+    def process_cycle(self, working_memory: WorkingMemory) -> None:
+        """Process one attention cycle"""
+        # Analyze context and allocate attention
+        attention_needs = self.analyze_attention_needs(working_memory)
+        self.allocate_attention_for_needs(attention_needs)
+        
+        # Clean up expired focuses
+        self.attention_state.cleanup_expired_focuses()
+        
+        # Rebalance if over capacity
+        self.attention_state.rebalance_focuses()
+```
+
+#### Attention Allocation Strategies
+
+```python
+def allocate_attention_balanced(self, needs: List[AttentionType]) -> None:
+    """Balanced strategy: Even distribution"""
+    if not needs:
+        return
+    
+    weight_per_need = min(0.25, self.attention_state.capacity / len(needs))
+    
+    for need in needs:
+        self.attention_state.add_focus(AttentionFocus(
+            focus_type=need,
+            weight=weight_per_need,
+            priority=AttentionPriority.MEDIUM,
+            duration=30.0
+        ))
+
+def allocate_attention_focused(self, needs: List[AttentionType]) -> None:
+    """Focused strategy: Primary focus gets 70%, others share 30%"""
+    if not needs:
+        return
+    
+    primary_need = needs[0]
+    self.attention_state.add_focus(AttentionFocus(
+        focus_type=primary_need,
+        weight=0.7,
+        priority=AttentionPriority.HIGH,
+        duration=45.0
+    ))
+    
+    if len(needs) > 1:
+        remaining_weight = 0.3 / (len(needs) - 1)
+        for need in needs[1:]:
+            self.attention_state.add_focus(AttentionFocus(
+                focus_type=need,
+                weight=remaining_weight,
+                priority=AttentionPriority.LOW,
+                duration=20.0
+            ))
+```
+
+#### Context Analysis for Attention
+
+```python
+def analyze_attention_needs(self, working_memory: WorkingMemory) -> List[AttentionType]:
+    """Determine what cognitive processes need attention"""
+    needs = []
+    
+    # Always need memory search
+    needs.append(AttentionType.MEMORY_SEARCH)
+    
+    # Check for complex input requiring insight generation
+    if self._is_complex_input(working_memory):
+        needs.append(AttentionType.INSIGHT_GENERATION)
+    
+    # Check for emotional content
+    if self._has_emotional_content(working_memory):
+        needs.append(AttentionType.EMOTIONAL_PROCESSING)
+    
+    # Always need response generation
+    needs.append(AttentionType.RESPONSE_GENERATION)
+    
+    # Add meta-cognition for complex scenarios
+    if len(working_memory.retrieved_memories) > 10:
+        needs.append(AttentionType.META_COGNITION)
+    
+    return needs
+
+def _is_complex_input(self, working_memory: WorkingMemory) -> bool:
+    """Determine if input is complex and needs insight generation"""
+    if not working_memory.structured_input:
+        return False
+    
+    text = working_memory.structured_input.raw_text
+    
+    # Check text length
+    if len(text) > 100:
+        return True
+    
+    # Check for question words
+    question_words = ['how', 'why', 'what', 'when', 'where', 'который', 'как', 'почему']
+    if any(word in text.lower() for word in question_words):
+        return True
+    
+    return False
+```
+
+#### Testing Attention System
+
+```python
+class TestAttentionEngine:
+    """Test attention system functionality"""
+    
+    def test_attention_allocation(self):
+        """Test basic attention allocation"""
+        engine = AttentionEngine(capacity=1.0, strategy=AttentionStrategy.BALANCED)
+        
+        # Manual allocation
+        engine.allocate_attention(
+            focus_type=AttentionType.MEMORY_SEARCH,
+            weight=0.6,
+            priority=AttentionPriority.HIGH,
+            duration=30.0
+        )
+        
+        # Check allocation
+        assert len(engine.attention_state.focuses) == 1
+        assert engine.attention_state.get_total_weight() == 0.6
+    
+    def test_strategy_switching(self):
+        """Test switching between attention strategies"""
+        engine = AttentionEngine()
+        
+        # Test balanced strategy
+        engine.set_strategy(AttentionStrategy.BALANCED)
+        assert engine.current_strategy == AttentionStrategy.BALANCED
+        
+        # Test focused strategy
+        engine.set_strategy(AttentionStrategy.FOCUSED)
+        assert engine.current_strategy == AttentionStrategy.FOCUSED
+    
+    def test_capacity_management(self):
+        """Test attention capacity management"""
+        engine = AttentionEngine(capacity=1.0)
+        
+        # Add focuses that exceed capacity
+        engine.allocate_attention(AttentionType.MEMORY_SEARCH, 0.7, AttentionPriority.HIGH)
+        engine.allocate_attention(AttentionType.INSIGHT_GENERATION, 0.6, AttentionPriority.MEDIUM)
+        
+        # Should rebalance to stay within capacity
+        engine.attention_state.rebalance_focuses()
+        assert engine.attention_state.get_total_weight() <= 1.0
+```
+
 ### Configuration and Tuning
+
+#### Attention System Settings
+
+```python
+# Attention system configuration
+ATTENTION_CONFIG = {
+    "default_capacity": 1.0,              # Total attention capacity
+    "default_strategy": "balanced",       # Default allocation strategy
+    "focus_duration": 30.0,               # Default focus duration (seconds)
+    "cleanup_interval": 10.0,             # How often to clean expired focuses
+    "rebalance_threshold": 1.1,           # When to trigger rebalancing
+    "max_focuses": 10                     # Maximum simultaneous focuses
+}
+```
+
+#### Attention Strategy Tuning
+
+```python
+# Strategy-specific parameters
+STRATEGY_PARAMS = {
+    "balanced": {
+        "min_weight_per_focus": 0.15,     # Minimum attention per focus
+        "max_weight_per_focus": 0.35      # Maximum attention per focus
+    },
+    "focused": {
+        "primary_weight": 0.7,            # Weight for primary focus
+        "secondary_weight_total": 0.3     # Total weight for secondary focuses
+    },
+    "exploratory": {
+        "exploration_bonus": 0.1,         # Extra weight for exploration
+        "diversity_factor": 1.2           # Encourage diverse attention types
+    }
+}
+```
 
 #### Emotional Processing Settings
 

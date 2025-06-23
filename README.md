@@ -9,7 +9,7 @@
 
 ![enter image description here](https://huxley.media/wp-content/uploads/2021/03/tzi-scaled.jpg)
 
-A sophisticated artificial intelligence system implementing metacognitive architecture based on Global Workspace Theory. The system features persistent memory, self-reflection capabilities, **advanced emotional processing**, and real-time consciousness simulation through vector-based semantic search and LLM-powered introspection.
+A sophisticated artificial intelligence system implementing metacognitive architecture based on Global Workspace Theory. The system features persistent memory, self-reflection capabilities, **advanced emotional processing**, **dynamic attention mechanism**, and real-time consciousness simulation through vector-based semantic search and LLM-powered introspection.
 
 ## 🧠 Architecture Overview
 
@@ -17,9 +17,10 @@ A sophisticated artificial intelligence system implementing metacognitive archit
 graph TB
     A[Input Text] --> B[SensoryCortex]
     B --> C[WorkingMemory]
-    C --> D[AssociativeEngine]
-    C --> E[IntrospectionEngine]
-    C --> J[EmotionalEngine]
+    C --> M[AttentionEngine]
+    M --> D[AssociativeEngine]
+    M --> E[IntrospectionEngine]
+    M --> J[EmotionalEngine]
     D --> F[LongTermMemory]
     E --> G[ResponseGenerator]
     J --> G
@@ -32,6 +33,7 @@ graph TB
     
     subgraph "Cognitive Cycle"
         C
+        M
         D
         E
         J
@@ -50,12 +52,21 @@ graph TB
         J --> L
         L --> C
     end
+    
+    subgraph "Attention System"
+        M
+        N[AttentionState]
+        O[AttentionFocus]
+        M --> N
+        N --> O
+    end
 ```
 
 ### Core Components
 
 - **🧮 SensoryCortex**: AI-powered analysis of input intent, sentiment, and tone using Google Gemini
 - **🧠 WorkingMemory**: Central coordination hub implementing Global Workspace Theory
+- **🎯 AttentionEngine**: Dynamic attention allocation with balanced, focused, and exploratory strategies
 - **🔗 AssociativeEngine**: Vector-based semantic search for relevant memory associations  
 - **🤔 IntrospectionEngine**: LLM-powered insight generation and paradox detection
 - **💖 EmotionalEngine**: Advanced emotional processing with PAD model and emotional memory
@@ -67,9 +78,12 @@ graph TB
 - **Persistent Memory**: Vector-based storage with semantic similarity search
 - **Real-time Consciousness**: Multi-cycle cognitive processing with stabilization
 - **AI-Powered Analysis**: Google Gemini integration for natural language understanding
-- **🆕 Emotional Intelligence**: PAD emotional model with AI-powered emotion analysis
-- **🆕 Emotional Memory**: Persistent emotional memories with decay and relevance scoring
-- **🆕 Emotionally-Aware Responses**: Context-sensitive emotional response generation
+- **🆕 Dynamic Attention**: Intelligent resource allocation with 3 attention strategies
+- **🆕 Attention Persistence**: Focus tracking across cognitive cycles with capacity management
+- **🆕 Context Switching**: Adaptive attention reallocation based on processing needs
+- **✅ Emotional Intelligence**: PAD emotional model with AI-powered emotion analysis
+- **✅ Emotional Memory**: Persistent emotional memories with decay and relevance scoring
+- **✅ Emotionally-Aware Responses**: Context-sensitive emotional response generation
 - **MCP Integration**: Works directly with Cursor IDE as a tool
 - **Multilingual Support**: English and Russian language processing
 - **Self-Reflection**: Generates insights, questions, and identifies paradoxes
@@ -145,8 +159,8 @@ from src.engine.engine import MetacognitiveEngine
 from src.engine.models.entry import Entry, EntryType
 from src.engine.models.emotional_state import EmotionalState, EmotionType
 
-# Initialize the engine with emotional processing
-engine = MetacognitiveEngine(enable_emotions=True)
+# Initialize the engine with emotional processing and attention system
+engine = MetacognitiveEngine(enable_emotions=True, enable_attention=True)
 
 # Add memories
 entry = Entry(
@@ -163,6 +177,13 @@ print(response)
 if engine.emotional_engine:
     emotional_summary = engine.emotional_engine.get_emotional_state_summary()
     print(f"Current emotional state: {emotional_summary['current_state']}")
+
+# Access attention state (if attention enabled)
+if engine.attention_engine:
+    attention_context = engine.attention_engine.get_attention_context()
+    print(f"Active focuses: {attention_context['attention_summary']['total_focuses']}")
+    print(f"Attention strategy: {attention_context['current_strategy']}")
+    print(f"Usage: {attention_context['attention_summary']['usage_percentage']}")
 
 # Legacy reflection mode
 insights = engine.analyze_new_thought("How does AI relate to consciousness?")
@@ -199,6 +220,38 @@ blended = emotional_state.blend_with(other_state, weight=0.3)
 print(f"Blended state: {blended.to_summary_string()}")
 ```
 
+### Attention System API
+
+```python
+from src.engine.processors.attention_engine import AttentionEngine, AttentionStrategy
+from src.engine.models.attention_state import AttentionType, AttentionPriority
+
+# Initialize attention engine
+attention_engine = AttentionEngine(capacity=1.0, strategy=AttentionStrategy.BALANCED)
+
+# Manual attention allocation
+attention_engine.allocate_attention(
+    focus_type=AttentionType.MEMORY_SEARCH,
+    weight=0.6,
+    priority=AttentionPriority.HIGH,
+    duration=30.0
+)
+
+# Get attention context
+context = attention_engine.get_attention_context()
+print(f"Strategy: {context['current_strategy']}")
+print(f"Active focuses: {context['attention_summary']['total_focuses']}")
+print(f"Capacity usage: {context['attention_summary']['usage_percentage']}")
+
+# Processing recommendations
+for rec in context['attention_guidance']['processing_recommendations']:
+    print(f"Recommendation: {rec}")
+
+# Switch strategies
+attention_engine.set_strategy(AttentionStrategy.FOCUSED)  # 70% to primary focus
+attention_engine.set_strategy(AttentionStrategy.EXPLORATORY)  # Wide exploration
+```
+
 ### REST API
 
 Start the FastAPI server:
@@ -211,7 +264,7 @@ uvicorn src.mcp_server:app --reload
 - **POST** `/add` - Add new memory
 - **POST** `/query` - Search memories  
 - **POST** `/reflect` - Reflect on thought (legacy)
-- **POST** `/process` - Advanced cognitive processing
+- **POST** `/process` - Advanced cognitive processing **with attention system**
 - **GET** `/list` - List all memories
 - **POST** `/clear` - Clear all memories
 
@@ -234,9 +287,42 @@ curl -X POST "http://localhost:8000/query" \
      -d '{"content": "consciousness emergence", "n_results": 3}'
 ```
 
+## 🎯 Attention System Demo
+
+Experience the new dynamic attention mechanism:
+
+```bash
+# Run the interactive attention system demo
+python demo_attention_system.py
+```
+
+The demo showcases:
+- **Dynamic Attention Allocation**: Real-time resource distribution
+- **Three Attention Strategies**: Balanced, focused, and exploratory approaches
+- **Context-Aware Processing**: Adaptive attention based on input complexity
+- **Capacity Management**: Intelligent focus rebalancing and cleanup
+- **Processing Recommendations**: AI-guided attention optimization
+
+### Attention System Features
+
+🎯 **5 Attention Types**: Memory search, insight generation, emotional processing, response generation, meta-cognition
+
+🧠 **Attention Strategies**:
+- **Balanced**: Even distribution (25% each focus)
+- **Focused**: Primary focus (70%) + secondary (30%)  
+- **Exploratory**: Wide exploration across all types
+
+🔄 **Dynamic Management**:
+- **Capacity Tracking**: Real-time usage monitoring
+- **Focus Expiration**: Automatic cleanup of expired focuses
+- **Rebalancing**: Intelligent resource redistribution
+- **Context Switching**: Adaptive strategy changes
+
+💾 **Attention Persistence**: Focus tracking across cognitive cycles
+
 ## 🎭 Emotional System Demo
 
-Experience the new emotional processing capabilities:
+Experience the advanced emotional processing capabilities:
 
 ```bash
 # Run the interactive emotional system demo
@@ -298,14 +384,17 @@ pytest -m "not slow"    # Exclude slow tests
 
 The test suite covers:
 - ✅ All core components (Engine, Memory, Processors)
-- ✅ **NEW**: Complete emotional system (25 tests)
+- ✅ **NEW**: Complete attention system (24 tests)
+- ✅ ✅ Complete emotional system (25 tests)
 - ✅ MCP server endpoints
 - ✅ Error handling and edge cases
 - ✅ Memory persistence and search
 - ✅ Cognitive cycle processing
 - ✅ AI integration (with mocking)
-- ✅ **NEW**: Emotional state management and transitions
-- ✅ **NEW**: Emotional memory with decay and relevance
+- ✅ ✅ Emotional state management and transitions
+- ✅ ✅ Emotional memory with decay and relevance
+- ✅ **NEW**: Attention allocation and strategy management
+- ✅ **NEW**: Focus tracking and capacity management
 
 ## 📊 Performance & Configuration
 
@@ -394,7 +483,7 @@ bandit -r src/
 
 ## 🔮 Roadmap
 
-**Current Status: 9.6/10** - See detailed [ROADMAP.md](ROADMAP.md) for the path to 10/10
+**Current Status: 9.7/10** - See detailed [ROADMAP.md](ROADMAP.md) for the path to 10/10
 
 **Phase 1 (Next 1-2 weeks):** Foundation Strengthening
 - [ ] **95%+ Test Coverage** (currently 75%)
@@ -402,7 +491,7 @@ bandit -r src/
 - [ ] **Production Readiness** enhancements
 
 **Phase 2 (1-2 months):** Cognitive Enhancement  
-- [ ] **Attention Mechanism**: Dynamic focus allocation
+- [x] **Attention Mechanism**: ✅ **COMPLETED** - Dynamic focus allocation with 3 strategies
 - [x] **Emotional Processing**: ✅ **COMPLETED** - PAD model with AI analysis
 - [ ] **Memory Consolidation**: Sleep-like reorganization
 
