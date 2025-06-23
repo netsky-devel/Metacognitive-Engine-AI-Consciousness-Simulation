@@ -92,27 +92,35 @@ class LongTermMemory:
             if results['ids'][0]:
                 for i in range(len(results['ids'][0])):
                     distance = results['distances'][0][i]
-                    similarity = 1 - distance
                     
-                    print(f"LongTermMemory: Result {i}: distance={distance:.4f}, similarity={similarity:.4f}")
+                    # For cosine distance: lower distance = higher similarity
+                    # We'll use distance directly as our threshold (lower = better)
+                    # Convert distance to a 0-1 similarity score for reporting
+                    # For cosine distance in range [0, 2]: similarity = max(0, 1 - distance/2)
+                    similarity_score = max(0, 1 - distance/2) if distance <= 2 else 0
                     
-                    # Filter by similarity threshold
-                    if similarity >= similarity_threshold:
+                    print(f"LongTermMemory: Result {i}: distance={distance:.4f}, similarity_score={similarity_score:.4f}")
+                    
+                    # Use distance threshold instead of similarity threshold
+                    # Lower distance = more similar. Set max distance threshold
+                    max_distance = 1.5  # Allow somewhat dissimilar but related results
+                    
+                    if distance <= max_distance:
                         memory = {
                             "id": results['ids'][0][i],
                             "distance": distance,
-                            "similarity": similarity,
+                            "similarity": similarity_score,
                             "metadata": results['metadatas'][0][i]
                         }
                         memories.append(memory)
                         print(f"LongTermMemory: Accepted memory: {memory['metadata'].get('content', '')[:50]}...")
                     else:
-                        print(f"LongTermMemory: Rejected memory due to low similarity ({similarity:.4f} < {similarity_threshold})")
+                        print(f"LongTermMemory: Rejected memory due to high distance ({distance:.4f} > {max_distance})")
 
-            # Sort by similarity (highest first)
-            memories.sort(key=lambda x: x['similarity'], reverse=True)
+            # Sort by distance (lowest first = most similar first)
+            memories.sort(key=lambda x: x['distance'])
             
-            print(f"LongTermMemory: Found {len(memories)} relevant memories (threshold: {similarity_threshold})")
+            print(f"LongTermMemory: Found {len(memories)} relevant memories (max_distance: 1.5)")
             return memories
             
         except Exception as e:
