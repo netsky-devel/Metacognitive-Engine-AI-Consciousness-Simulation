@@ -96,10 +96,13 @@ class AssociativeEngine:
             and its similarity score (distance).
         """
         print(f"AssociativeEngine: Searching for memories related to '{query_text}'...")
+        print(f"AssociativeEngine: Using top_n={top_n}")
+        
         # Use the updated search_memories method (no similarity_threshold parameter)
         search_results = self._ltm.search_memories(query_text, n_results=top_n)
         
         print(f"AssociativeEngine: Found {len(search_results)} raw search results")
+        print(f"AssociativeEngine: Raw results: {search_results}")
         
         # Преобразуем формат данных для удобства
         associations = []
@@ -107,4 +110,5 @@ class AssociativeEngine:
             associations.append((res['metadata'], res['distance']))
             print(f"  Association: '{res['metadata']['content'][:50]}...' (similarity: {res.get('similarity', 0):.3f})")
             
+        print(f"AssociativeEngine: Returning {len(associations)} associations")
         return associations 
