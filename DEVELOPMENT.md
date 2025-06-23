@@ -60,9 +60,10 @@ Create `.vscode/settings.json`:
 ```
 tests/
 ├── test_comprehensive.py      # All component tests
-├── test_mcp_server.py        # API endpoint tests
-├── test_long_term_memory.py  # Legacy memory tests
-└── conftest.py              # Shared fixtures
+├── test_emotional_system.py   # NEW: Emotional processing tests (25 tests)
+├── test_mcp_server.py         # API endpoint tests
+├── test_long_term_memory.py   # Legacy memory tests
+└── conftest.py               # Shared fixtures
 ```
 
 ### Test Categories
@@ -146,7 +147,8 @@ The system implements Global Workspace Theory through:
 3. **Attention Mechanism**
    - AssociativeEngine focuses on relevant memories
    - IntrospectionEngine analyzes current context
-   - ResponseGenerator synthesizes final output
+   - EmotionalEngine processes emotional content (NEW)
+   - ResponseGenerator synthesizes emotionally-aware output
 
 ### Design Patterns
 
@@ -279,6 +281,212 @@ services:
    - Add logging throughout the system
    - Monitor API response times
    - Track memory usage and vector search performance
+
+## 🎭 Emotional System Development (NEW)
+
+### Emotional Architecture Components
+
+The emotional system adds a new layer of processing to the cognitive architecture:
+
+```python
+# Core emotional components
+from src.engine.models.emotional_state import EmotionalState, EmotionType
+from src.engine.processors.emotional_engine import EmotionalEngine
+```
+
+### Developing Emotional Features
+
+#### Adding New Emotions
+
+1. **Define emotion in EmotionType enum**:
+   ```python
+   class EmotionType(Enum):
+       # Add new emotion
+       NOSTALGIA = "nostalgia"
+   ```
+
+2. **Update pattern matching**:
+   ```python
+   EMOTION_PATTERNS = {
+       EmotionType.NOSTALGIA: [
+           r"remember when", r"back in the day", r"nostalgic"
+       ]
+   }
+   ```
+
+3. **Add to PAD mappings**:
+   ```python
+   PAD_MAPPINGS = {
+       EmotionType.NOSTALGIA: {"valence": 0.3, "arousal": 0.2, "dominance": 0.4}
+   }
+   ```
+
+#### Testing Emotional Components
+
+```python
+class TestEmotionalEngine:
+    """Test emotional processing"""
+    
+    @pytest.fixture
+    def emotional_engine(self):
+        return EmotionalEngine(enable_ai=False)  # Use pattern-based for tests
+    
+    def test_emotion_detection(self, emotional_engine):
+        """Test basic emotion detection"""
+        result = emotional_engine.analyze_emotions("I'm so excited!")
+        assert EmotionType.EXCITEMENT in result['emotions']
+        assert result['emotional_state']['valence'] > 0
+    
+    def test_emotional_memory_storage(self, emotional_engine):
+        """Test emotional memory creation"""
+        emotional_engine.process_emotional_content("I feel sad about this")
+        memories = emotional_engine.get_emotional_memories()
+        assert len(memories) > 0
+        assert memories[0].trigger_text == "I feel sad about this"
+```
+
+#### Emotional Processing Pipeline
+
+```python
+def process_emotional_content(self, text: str, working_memory: WorkingMemory) -> None:
+    """Process emotional content and update state"""
+    
+    # 1. Analyze emotions in text
+    analysis = self.analyze_emotions(text)
+    
+    # 2. Update current emotional state
+    self.update_emotional_state(analysis)
+    
+    # 3. Retrieve relevant emotional memories
+    relevant_memories = self.get_relevant_emotional_memories(text)
+    
+    # 4. Create emotional context for response
+    emotional_context = self.create_emotional_context(analysis, relevant_memories)
+    
+    # 5. Store in working memory
+    working_memory.set_emotional_context(emotional_context)
+    
+    # 6. Create emotional memory if significant
+    if analysis.get('intensity', 0) > 0.5:
+        self.create_emotional_memory(text, analysis)
+```
+
+### Emotional Response Integration
+
+#### ResponseGenerator Enhancement
+
+```python
+def generate_response(self, working_memory: WorkingMemory) -> str:
+    """Generate emotionally-aware response"""
+    
+    # Get emotional context
+    emotional_context = working_memory.get_emotional_context()
+    
+    # Build enhanced prompt with emotional guidance
+    prompt = self._build_emotional_prompt(
+        working_memory.get_context_summary(),
+        emotional_context
+    )
+    
+    # Generate response with emotional awareness
+    return self._generate_with_emotional_context(prompt)
+```
+
+#### Emotional Guidance System
+
+```python
+def create_emotional_guidance(self, emotional_analysis: Dict) -> Dict:
+    """Create guidance for response generation"""
+    
+    guidance = {
+        "detected_emotions": emotional_analysis.get('emotions', []),
+        "emotional_state": emotional_analysis.get('emotional_state', 'neutral'),
+        "response_tone": self._determine_response_tone(emotional_analysis),
+        "empathy_level": self._calculate_empathy_level(emotional_analysis),
+        "emotional_context": emotional_analysis.get('context', ''),
+        "suggested_approach": self._suggest_approach(emotional_analysis)
+    }
+    
+    return guidance
+```
+
+### Emotional Memory Management
+
+#### Memory Decay Implementation
+
+```python
+def update_emotional_memories(self) -> None:
+    """Update emotional memories with time-based decay"""
+    
+    current_time = datetime.now()
+    
+    for memory in self.emotional_memories:
+        # Calculate time-based decay
+        time_diff = (current_time - memory.timestamp).total_seconds()
+        decay_amount = time_diff * memory.decay_factor
+        
+        # Apply decay to intensity
+        memory.intensity = max(0.0, memory.intensity - decay_amount)
+        
+        # Remove memories that have decayed completely
+        if memory.intensity < 0.1:
+            self.emotional_memories.remove(memory)
+```
+
+#### Relevance Scoring
+
+```python
+def calculate_relevance_score(self, memory: EmotionalMemory, current_text: str) -> float:
+    """Calculate how relevant an emotional memory is to current context"""
+    
+    # Semantic similarity
+    semantic_score = self._calculate_semantic_similarity(
+        memory.trigger_text, current_text
+    )
+    
+    # Emotional similarity
+    current_emotions = self.analyze_emotions(current_text)
+    emotional_score = self._calculate_emotional_similarity(
+        memory.emotional_state, current_emotions
+    )
+    
+    # Time decay factor
+    time_factor = memory.intensity
+    
+    # Combined relevance score
+    relevance = (semantic_score * 0.4 + emotional_score * 0.4 + time_factor * 0.2)
+    
+    return min(1.0, relevance)
+```
+
+### Configuration and Tuning
+
+#### Emotional Processing Settings
+
+```python
+# Emotional processing configuration
+EMOTIONAL_CONFIG = {
+    "enable_ai_analysis": True,          # Use AI for emotion detection
+    "emotion_threshold": 0.3,            # Minimum emotion intensity to store
+    "memory_decay_rate": 0.001,          # How fast emotional memories fade
+    "max_emotional_memories": 100,       # Maximum stored emotional memories
+    "relevance_threshold": 0.4,          # Minimum relevance for memory retrieval
+    "emotional_context_weight": 0.3      # How much emotions influence responses
+}
+```
+
+#### PAD Model Tuning
+
+```python
+# Fine-tune PAD mappings for specific emotions
+PAD_MAPPINGS = {
+    EmotionType.JOY: {"valence": 0.8, "arousal": 0.7, "dominance": 0.6},
+    EmotionType.SADNESS: {"valence": -0.7, "arousal": 0.3, "dominance": 0.2},
+    EmotionType.ANGER: {"valence": -0.6, "arousal": 0.9, "dominance": 0.8},
+    EmotionType.FEAR: {"valence": -0.8, "arousal": 0.8, "dominance": 0.1},
+    # Add more emotions as needed
+}
+```
 
 ## 📊 Performance Optimization
 

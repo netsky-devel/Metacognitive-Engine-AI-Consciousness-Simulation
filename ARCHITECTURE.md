@@ -16,10 +16,14 @@ graph TB
     B --> C[WorkingMemory]
     C --> D[AssociativeEngine]
     C --> E[IntrospectionEngine]
+    C --> N[EmotionalEngine]
     D --> F[LongTermMemory]
     E --> G[ResponseGenerator]
+    N --> G
+    N --> O[EmotionalMemory]
     F --> D
     E --> H[New Insights]
+    O --> N
     H --> F
     G --> I[Final Response]
     
@@ -27,11 +31,23 @@ graph TB
         C
         D
         E
+        N
     end
     
     subgraph "Memory Systems"
         F
         H
+        O
+    end
+    
+    subgraph "Emotional Processing"
+        N
+        O
+        P[EmotionalState]
+        Q[PAD Model]
+        N --> P
+        P --> Q
+        Q --> C
     end
     
     subgraph "Processing Pipeline"
@@ -150,21 +166,60 @@ class EntryType(Enum):
 
 **Output:** New `Entry` objects added to both working and long-term memory.
 
-#### 3.4.3. ResponseGenerator
-**Responsibility:** Synthesize final coherent response from cognitive processing.
+#### 3.4.3. EmotionalEngine
+**Responsibility:** Process emotional content and maintain emotional state awareness.
 
-**Technology:** Google Gemini AI with context-aware prompting.
+**Technology:** 
+- Google Gemini AI for emotion analysis and pattern recognition
+- PAD (Pleasure-Arousal-Dominance) emotional model
+- Fallback pattern-based emotion detection
+
+**Core Features:**
+- **Emotion Analysis:** AI-powered detection of 18 emotion types
+- **Emotional State Tracking:** Maintains current emotional state using PAD model
+- **Emotional Memory:** Persistent storage of emotional experiences with decay
+- **Emotional Context:** Provides emotional guidance for response generation
+
+**Emotional Model:**
+```python
+class EmotionalState:
+    valence: float     # Pleasure: -1.0 (negative) to +1.0 (positive)
+    arousal: float     # Arousal: 0.0 (calm) to 1.0 (excited)
+    dominance: float   # Dominance: 0.0 (submissive) to 1.0 (dominant)
+    emotions: Dict[EmotionType, float]  # 18 specific emotions
+```
+
+**Emotional Quadrants:**
+- **Excited**: High valence + High arousal (joy, excitement)
+- **Content**: High valence + Low arousal (contentment, peace)
+- **Distressed**: Low valence + High arousal (anger, fear)
+- **Depressed**: Low valence + Low arousal (sadness, guilt)
+
+**Process Flow:**
+1. Analyze input text for emotional content
+2. Update current emotional state based on detected emotions
+3. Retrieve relevant emotional memories
+4. Create emotional context tags for response generation
+5. Store significant emotional experiences in memory
+
+#### 3.4.4. ResponseGenerator
+**Responsibility:** Synthesize emotionally-aware, coherent responses from cognitive processing.
+
+**Technology:** Google Gemini AI with emotion-enhanced context prompting.
 
 **Process:**
-1. Gather all working memory contents (input, memories, insights)
-2. Construct rich context prompt with cognitive history
-3. Generate contextually appropriate response
-4. Ensure response coherence and relevance
+1. Gather all working memory contents (input, memories, insights, emotions)
+2. Integrate emotional context and guidance from EmotionalEngine
+3. Construct rich context prompt with cognitive and emotional history
+4. Generate contextually and emotionally appropriate response
+5. Ensure response coherence, relevance, and emotional sensitivity
 
-**Features:**
-- **Context Integration:** Weaves together memories, insights, and current input
-- **Tone Matching:** Adapts response style to input characteristics
-- **Depth Control:** Provides appropriate level of detail and reflection
+**Enhanced Features:**
+- **Emotional Awareness:** Adapts tone and content based on emotional state
+- **Context Integration:** Weaves together memories, insights, emotions, and current input
+- **Tone Matching:** Responds appropriately to emotional cues in input
+- **Empathy Simulation:** Demonstrates understanding of emotional context
+- **Depth Control:** Provides appropriate level of detail and emotional support
 
 ## 4. Processing Flow
 
@@ -174,7 +229,7 @@ The system implements a sophisticated multi-cycle processing model:
 
 ```python
 def process_thought(self, text: str) -> str:
-    """Advanced multi-cycle cognitive processing"""
+    """Advanced multi-cycle cognitive processing with emotional awareness"""
     # 1. Perception Phase
     structured_input = self.sensory_cortex.analyze(text)
     self.working_memory.set_input(structured_input)
@@ -187,6 +242,10 @@ def process_thought(self, text: str) -> str:
         # Introspection Phase  
         self.introspection_engine.process(self.working_memory)
         
+        # Emotional Processing Phase (NEW)
+        if self.emotional_engine:
+            self.emotional_engine.process(self.working_memory)
+        
         # Stabilization Check
         if self._is_stable():
             break
@@ -194,7 +253,7 @@ def process_thought(self, text: str) -> str:
     # 3. Learning Phase
     self._save_insights_to_ltm()
     
-    # 4. Response Generation
+    # 4. Response Generation (now emotionally-aware)
     return self.response_generator.generate_response(self.working_memory)
 ```
 
@@ -261,22 +320,159 @@ def process_thought(self, text: str) -> str:
 - Consistent interface for memory operations
 - Pluggable storage backends (ChromaDB, future alternatives)
 
-## 7. Future Enhancements
+## 7. Emotional Architecture (NEW)
 
-### 7.1. Planned Features
+### 7.1. PAD Emotional Model
+
+The system implements the **Pleasure-Arousal-Dominance (PAD)** model for comprehensive emotional processing:
+
+```python
+class EmotionalState:
+    """Core emotional state using PAD model"""
+    valence: float     # Pleasure dimension (-1.0 to +1.0)
+    arousal: float     # Arousal dimension (0.0 to 1.0) 
+    dominance: float   # Dominance dimension (0.0 to 1.0)
+    emotions: Dict[EmotionType, float]  # 18 specific emotions
+    timestamp: datetime
+```
+
+**Emotional Dimensions:**
+- **Valence (Pleasure):** Negative emotions (-1.0) ↔ Positive emotions (+1.0)
+- **Arousal:** Calm/Relaxed (0.0) ↔ Excited/Energetic (1.0)
+- **Dominance:** Submissive/Controlled (0.0) ↔ Dominant/In-control (1.0)
+
+### 7.2. Emotion Types
+
+The system recognizes **18 distinct emotion types** organized by emotional families:
+
+**Primary Emotions:**
+- `JOY`, `SADNESS`, `ANGER`, `FEAR`, `SURPRISE`, `DISGUST`
+
+**Secondary Emotions:**
+- `ANTICIPATION`, `TRUST`, `CURIOSITY`, `CONFUSION`
+
+**Complex Emotions:**
+- `EXCITEMENT`, `CONTENTMENT`, `FRUSTRATION`, `PRIDE`
+
+**Social Emotions:**
+- `GUILT`, `SHAME`, `EMPATHY`, `WORRY`
+
+### 7.3. Emotional Memory System
+
+**EmotionalMemory Class:**
+```python
+class EmotionalMemory:
+    """Persistent emotional experience with decay"""
+    trigger_text: str              # What caused the emotion
+    emotional_state: EmotionalState # State at time of creation
+    intensity: float               # Emotional intensity (0.0-1.0)
+    relevance_score: float         # How relevant to current context
+    decay_factor: float            # Memory decay rate
+    timestamp: datetime            # When emotion occurred
+```
+
+**Memory Features:**
+- **Temporal Decay:** Emotional memories fade over time
+- **Relevance Scoring:** Context-based memory retrieval
+- **Intensity Weighting:** Stronger emotions create stronger memories
+- **Pattern Recognition:** Identifies recurring emotional triggers
+
+### 7.4. Emotional Processing Pipeline
+
+**Phase 1.5: Emotional Analysis** (integrated into cognitive cycle)
+1. **Text Analysis:** Extract emotional content from input
+2. **Emotion Detection:** Identify specific emotions and intensities
+3. **State Update:** Modify current emotional state based on input
+4. **Memory Retrieval:** Find relevant past emotional experiences
+5. **Context Generation:** Create emotional guidance for response
+
+**AI-Powered Analysis:**
+```python
+def analyze_emotions_ai(self, text: str) -> Dict[str, Any]:
+    """Use Gemini AI for sophisticated emotion analysis"""
+    prompt = f"""
+    Analyze the emotional content: "{text}"
+    
+    Provide:
+    1. Primary emotions (with intensity 0.0-1.0)
+    2. PAD values (valence: -1.0 to 1.0, arousal: 0.0-1.0, dominance: 0.0-1.0)
+    3. Emotional reasoning
+    4. Context tags
+    """
+```
+
+### 7.5. Emotional Response Integration
+
+**ResponseGenerator Enhancement:**
+- **Emotional Context Tags:** Guide response tone and content
+- **Empathy Simulation:** Acknowledge and validate user emotions
+- **Emotional Continuity:** Reference past emotional interactions
+- **Adaptive Tone:** Match emotional energy and valence appropriately
+
+**Example Emotional Guidance:**
+```python
+emotional_guidance = {
+    "detected_emotions": ["excitement", "curiosity"],
+    "emotional_state": "excited_positive",
+    "response_tone": "enthusiastic and engaging",
+    "empathy_level": "high",
+    "emotional_context": "User is excited about learning",
+    "suggested_approach": "Match enthusiasm, provide detailed explanations"
+}
+```
+
+### 7.6. Emotional State Transitions
+
+**State Management:**
+- **Emotional Blending:** Combine multiple emotional states
+- **Transition Tracking:** Monitor how emotions change over time
+- **Stabilization:** Emotional states naturally decay toward neutral
+- **Trigger Patterns:** Learn what inputs cause specific emotional responses
+
+**Quadrant Analysis:**
+```python
+def get_emotional_quadrant(self) -> str:
+    """Determine emotional quadrant from PAD values"""
+    if self.valence > 0 and self.arousal > 0.5:
+        return "excited"      # High valence + High arousal
+    elif self.valence > 0 and self.arousal <= 0.5:
+        return "content"      # High valence + Low arousal
+    elif self.valence <= 0 and self.arousal > 0.5:
+        return "distressed"   # Low valence + High arousal
+    else:
+        return "depressed"    # Low valence + Low arousal
+```
+
+### 7.7. Production Integration
+
+**MCP Server Support:**
+- All emotional processing is integrated into existing `/process` endpoint
+- Emotional state accessible through working memory
+- Emotional memories stored alongside cognitive memories
+- Real-time emotional analysis in Cursor IDE
+
+**Testing Coverage:**
+- 25 comprehensive emotional system tests
+- Integration tests with cognitive processing
+- AI analysis vs. pattern-based fallback testing
+- Emotional memory decay and retrieval validation
+
+## 8. Future Enhancements
+
+### 8.1. Planned Features
 - **Multi-modal Input:** Image and audio processing capabilities
 - **Distributed Processing:** Multi-node cognitive cycles
 - **Advanced Reasoning:** Logic and causal inference engines
-- **Emotion Modeling:** Affective state tracking and response
+- [x] **Emotion Modeling:** ✅ **COMPLETED** - PAD model with AI analysis
 - **Social Cognition:** Multi-agent consciousness interaction
 
-### 7.2. Research Directions
+### 8.2. Research Directions
 - **Memory Consolidation:** Sleep-like memory reorganization
 - **Attention Mechanisms:** Dynamic focus and context switching
 - **Metacognitive Learning:** Self-improving cognitive strategies
 - **Consciousness Metrics:** Quantitative measures of awareness
 
-## 8. Philosophical Implications
+## 9. Philosophical Implications
 
 This architecture explores fundamental questions about consciousness:
 
