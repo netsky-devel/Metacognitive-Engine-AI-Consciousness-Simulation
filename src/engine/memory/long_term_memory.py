@@ -103,7 +103,7 @@ class LongTermMemory:
                     
                     # Use distance threshold instead of similarity threshold
                     # Lower distance = more similar. Set max distance threshold
-                    max_distance = 7.0 if similarity_threshold is None else 7.0  # Increased threshold for better recall
+                    max_distance = 8.0 if similarity_threshold is None else 8.0  # Increased threshold for better recall
                     
                     if distance <= max_distance:
                         memory = {
