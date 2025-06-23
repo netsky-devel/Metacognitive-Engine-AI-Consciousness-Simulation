@@ -103,7 +103,7 @@ class LongTermMemory:
                     
                     # Use distance threshold instead of similarity threshold
                     # Lower distance = more similar. Set max distance threshold
-                    max_distance = 1.5  # Allow somewhat dissimilar but related results
+                    max_distance = 2.0  # Increase threshold to allow more results
                     
                     if distance <= max_distance:
                         memory = {
@@ -120,7 +120,7 @@ class LongTermMemory:
             # Sort by distance (lowest first = most similar first)
             memories.sort(key=lambda x: x['distance'])
             
-            print(f"LongTermMemory: Found {len(memories)} relevant memories (max_distance: 1.5)")
+            print(f"LongTermMemory: Found {len(memories)} relevant memories (max_distance: 2.0)")
             return memories
             
         except Exception as e:
