@@ -69,6 +69,20 @@ class ResponseGenerator:
                 "",
             ])
         
+        # Add emotional context if available
+        if hasattr(cognitive_state, 'emotional_state') and cognitive_state.emotional_state:
+            emotional_state = cognitive_state.emotional_state
+            prompt_parts.extend([
+                "EMOTIONAL CONTEXT:",
+                f"- Emotional state: {emotional_state.to_summary_string()}",
+                f"- Emotional quadrant: {emotional_state.get_emotional_quadrant()}",
+                f"- Dominant emotion: {emotional_state.get_dominant_emotion().value if emotional_state.get_dominant_emotion() else 'None'}",
+                f"- Emotional intensity: {emotional_state.get_emotional_intensity():.2f}",
+                f"- Valence: {emotional_state.valence:.2f} (positive/negative)",
+                f"- Arousal: {emotional_state.arousal:.2f} (calm/excited)",
+                "",
+            ])
+        
         prompt_parts.extend([
             "COGNITIVE STATE:",
             f"- Cycles completed: {cognitive_state.cycle_count}",
@@ -81,8 +95,17 @@ class ResponseGenerator:
             "Match the tone and sentiment appropriately.",
             "Be authentic and show the depth of your processing.",
             "",
+            "EMOTIONAL RESPONSE GUIDELINES:",
+            "- If emotional context is provided, incorporate it naturally into your response",
+            "- Match the user's emotional energy level (high arousal = more energetic response)",
+            "- Respond empathetically if the user seems to be in distress or negative emotional state",
+            "- Be encouraging if the user seems to need support",
+            "- Show emotional understanding and connection when appropriate",
+            "- If positive emotions are detected, respond with warmth and engagement",
+            "",
             "Your response should be natural and conversational, not a data dump.",
-            "Show how the memories and insights influenced your thinking."
+            "Show how the memories, insights, and emotional context influenced your thinking.",
+            "Demonstrate emotional intelligence in your response."
         ])
         
         return "\n".join(prompt_parts)

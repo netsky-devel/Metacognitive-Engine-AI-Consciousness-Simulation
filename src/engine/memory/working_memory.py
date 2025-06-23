@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from ..models.entry import Entry
+from ..models.emotional_state import EmotionalState
 
 
 @dataclass
@@ -31,6 +32,10 @@ class CognitiveState:
     last_update: datetime = field(default_factory=datetime.now)
     active_insights: List[str] = field(default_factory=list)
     detected_paradoxes: List[str] = field(default_factory=list)
+    
+    # Emotional processing state
+    emotional_state: Optional[EmotionalState] = None
+    emotional_processing_enabled: bool = False
 
 
 class WorkingMemory:
@@ -95,6 +100,28 @@ class WorkingMemory:
             if hasattr(self.cognitive_state, key):
                 setattr(self.cognitive_state, key, value)
         self.cognitive_state.last_update = datetime.now()
+    
+    def set_emotional_state(self, emotional_state: EmotionalState):
+        """Set the current emotional state."""
+        self.cognitive_state.emotional_state = emotional_state
+        self.cognitive_state.emotional_processing_enabled = True
+        self.cognitive_state.last_update = datetime.now()
+        print(f"WorkingMemory: Emotional state set - {emotional_state.to_summary_string()}")
+    
+    def get_emotional_context(self) -> Dict[str, Any]:
+        """Get emotional context for processing."""
+        if not self.cognitive_state.emotional_state:
+            return {}
+        
+        return {
+            "emotional_quadrant": self.cognitive_state.emotional_state.get_emotional_quadrant(),
+            "dominant_emotion": self.cognitive_state.emotional_state.get_dominant_emotion(),
+            "emotional_intensity": self.cognitive_state.emotional_state.get_emotional_intensity(),
+            "is_positive": self.cognitive_state.emotional_state.is_positive(),
+            "is_high_arousal": self.cognitive_state.emotional_state.is_high_arousal(),
+            "valence": self.cognitive_state.emotional_state.valence,
+            "arousal": self.cognitive_state.emotional_state.arousal
+        }
     
     def get_context_summary(self) -> str:
         """Get a summary of the current context for processing."""

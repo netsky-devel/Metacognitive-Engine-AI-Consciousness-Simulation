@@ -3,6 +3,7 @@ from src.engine.memory.working_memory import WorkingMemory
 from src.engine.processors.associative_engine import AssociativeEngine
 from src.engine.processors.introspection_engine import IntrospectionEngine
 from src.engine.processors.response_generator import ResponseGenerator
+from src.engine.processors.emotional_engine import EmotionalEngine
 from src.engine.perception.sensory_cortex import SensoryCortex
 from src.engine.models.entry import Entry
 
@@ -12,7 +13,7 @@ class MetacognitiveEngine:
     This class initializes and integrates all cognitive components,
     and orchestrates the complex cognitive cycle through WorkingMemory.
     """
-    def __init__(self):
+    def __init__(self, enable_emotions: bool = True):
         print("Initializing Advanced Metacognitive Engine...")
         
         # Core memory systems
@@ -25,7 +26,14 @@ class MetacognitiveEngine:
         self.introspection_engine = IntrospectionEngine()
         self.response_generator = ResponseGenerator()
         
-        print("Advanced Engine components initialized.")
+        # Emotional processing system
+        self.emotional_engine = EmotionalEngine() if enable_emotions else None
+        self.emotions_enabled = enable_emotions
+        
+        if enable_emotions:
+            print("Advanced Engine components initialized with emotional processing.")
+        else:
+            print("Advanced Engine components initialized without emotional processing.")
 
     def add_memory(self, entry: Entry):
         """Adds a new entry directly to long-term memory."""
@@ -62,6 +70,12 @@ class MetacognitiveEngine:
         print(f"\n🔍 PHASE 1: PERCEPTION")
         structured_input = self.sensory_cortex.analyze(text)
         self.working_memory.set_input(structured_input)
+        
+        # 1.5. EMOTIONAL PROCESSING PHASE (if enabled)
+        if self.emotions_enabled and self.emotional_engine:
+            print(f"\n💖 PHASE 1.5: EMOTIONAL PROCESSING")
+            self.emotional_engine.process_emotional_input(self.working_memory)
+            self.working_memory.set_emotional_state(self.emotional_engine.current_emotional_state)
         
         # 2. COGNITIVE CYCLES
         for cycle in range(max_cycles):
