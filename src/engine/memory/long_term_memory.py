@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 from typing import List, Dict, Any
 import uuid
 
-from src.engine.models.entry import Entry
+from src.engine.models.entry import Entry, EntryType
 
 
 class LongTermMemory:
@@ -56,29 +56,82 @@ class LongTermMemory:
         )
         print(f"Added memory to LTM: {entry}")
 
-    def search_memories(self, query_text: str, n_results: int = 5) -> List[Dict[str, Any]]:
+    def search_memories(self, query_text: str, n_results: int = 5, similarity_threshold: float = 0.5) -> List[Dict[str, Any]]:
         """
         Searches for memories semantically similar to the query text.
         
-        Returns a list of dictionaries, where each dictionary contains
-        the memory's metadata and its distance (similarity score).
-        """
-        query_embedding = self.model.encode([query_text])[0].tolist()
+        Args:
+            query_text: Text to search for
+            n_results: Maximum number of results to return
+            similarity_threshold: Minimum similarity score (1 - distance) to include
         
-        results = self.collection.query(
-            query_embeddings=[query_embedding],
-            n_results=n_results
-        )
+        Returns:
+            List of dictionaries with memory metadata and similarity scores
+        """
+        if not query_text.strip():
+            return []
+        
+        try:
+            query_embedding = self.model.encode([query_text])[0].tolist()
+            
+            results = self.collection.query(
+                query_embeddings=[query_embedding],
+                n_results=min(n_results, 50)  # Limit max results for performance
+            )
 
-        # The result from chromadb is a dictionary of lists. Let's reformat it.
-        memories = []
-        if results['ids'][0]:
-            for i in range(len(results['ids'][0])):
-                memory = {
-                    "id": results['ids'][0][i],
-                    "distance": results['distances'][0][i],
-                    "metadata": results['metadatas'][0][i]
-                }
-                memories.append(memory)
+            # The result from chromadb is a dictionary of lists. Let's reformat it.
+            memories = []
+            if results['ids'][0]:
+                for i in range(len(results['ids'][0])):
+                    distance = results['distances'][0][i]
+                    similarity = 1 - distance
+                    
+                    # Filter by similarity threshold
+                    if similarity >= similarity_threshold:
+                        memory = {
+                            "id": results['ids'][0][i],
+                            "distance": distance,
+                            "similarity": similarity,
+                            "metadata": results['metadatas'][0][i]
+                        }
+                        memories.append(memory)
 
-        return memories 
+            # Sort by similarity (highest first)
+            memories.sort(key=lambda x: x['similarity'], reverse=True)
+            
+            print(f"LongTermMemory: Found {len(memories)} relevant memories (threshold: {similarity_threshold})")
+            return memories
+            
+        except Exception as e:
+            print(f"ERROR: Memory search failed: {e}")
+            return []
+
+    def query(self, query_text: str, n_results: int = 5) -> List[Entry]:
+        """
+        High-level query method that returns Entry objects.
+        
+        Args:
+            query_text: Text to search for
+            n_results: Maximum number of results to return
+            
+        Returns:
+            List of Entry objects
+        """
+        search_results = self.search_memories(query_text, n_results)
+        
+        entries = []
+        for result in search_results:
+            try:
+                metadata = result['metadata']
+                entry = Entry(
+                    id=result['id'],
+                    content=metadata.get('content', ''),
+                    entry_type=EntryType(metadata.get('entry_type', 'insight')),
+                    context=metadata.get('context', ''),
+                )
+                entries.append(entry)
+            except Exception as e:
+                print(f"ERROR: Failed to convert memory to Entry: {e}")
+                continue
+        
+        return entries 

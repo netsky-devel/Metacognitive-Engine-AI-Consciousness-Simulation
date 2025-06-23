@@ -1,60 +1,35 @@
 import spacy
+import os
+import json
+import google.generativeai as genai
 from langdetect import detect, lang_detect_exception
 import logging
-import re
 from typing import Dict, List, Tuple
 
 from ..memory.working_memory import StructuredInput
 
-# Настройка логирования для подавления слишком "громких" библиотек
+# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 class SensoryCortex:
     """
-    Advanced perceptual analysis system that transforms raw text into rich StructuredInput.
-    Performs intent recognition, sentiment analysis, tone detection, and entity extraction.
+    AI-powered perceptual analysis system that transforms raw text into rich StructuredInput.
+    Uses LLM for intent recognition, sentiment analysis, tone detection, and spaCy for entity extraction.
     """
     def __init__(self):
         self.models = {}  # Кэш для загруженных моделей spaCy
         
-        # Intent patterns - простая regex-based система для демонстрации
-        self.intent_patterns = {
-            'QUESTION': [r'\?', r'как\s+', r'что\s+', r'почему', r'зачем', r'когда', r'где', 
-                        r'how\s+', r'what\s+', r'why', r'when', r'where'],
-            'CHALLENGE_PROPOSAL': [r'попробуй', r'можешь\s+ли', r'давай', r'предлагаю',
-                                  r'try\s+', r'can\s+you', r'let\'s', r'i\s+suggest'],
-            'REFLECTION': [r'думаю', r'считаю', r'мне\s+кажется', r'по\s+моему',
-                          r'i\s+think', r'i\s+believe', r'it\s+seems', r'in\s+my\s+opinion'],
-            'COMMAND': [r'сделай', r'создай', r'покажи', r'объясни',
-                       r'make', r'create', r'show', r'explain'],
-            'FEEDBACK': [r'хорошо', r'плохо', r'неправильно', r'отлично',
-                        r'good', r'bad', r'wrong', r'excellent']
-        }
+        # Initialize LLM for advanced analysis
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            log.warning("GEMINI_API_KEY not set. Using fallback analysis.")
+            self.llm = None
+        else:
+            genai.configure(api_key=api_key)
+            self.llm = genai.GenerativeModel('gemini-1.5-flash-latest')
         
-        # Sentiment patterns
-        self.sentiment_patterns = {
-            'POSITIVE': [r'хорошо', r'отлично', r'замечательно', r'прекрасно',
-                        r'good', r'excellent', r'wonderful', r'great'],
-            'NEGATIVE': [r'плохо', r'ужасно', r'неправильно', r'кошмар',
-                        r'bad', r'terrible', r'wrong', r'awful'],
-            'CURIOUS': [r'интересно', r'любопытно', r'хочу\s+знать',
-                       r'interesting', r'curious', r'want\s+to\s+know'],
-            'SKEPTICAL': [r'сомневаюсь', r'не\s+уверен', r'вряд\s+ли',
-                         r'doubt', r'not\s+sure', r'unlikely']
-        }
-        
-        # Tone patterns  
-        self.tone_patterns = {
-            'FORMAL': [r'Вы', r'Ваш', r'позвольте', r'благодарю',
-                      r'please', r'thank\s+you', r'would\s+you'],
-            'CASUAL': [r'ты', r'твой', r'привет', r'пока',
-                      r'hey', r'hi', r'bye', r'you\'re'],
-            'ENTHUSIASTIC': [r'!', r'вау', r'потрясающе', r'круто',
-                           r'wow', r'amazing', r'awesome', r'cool'],
-            'SKEPTICAL': [r'серьёзно\?', r'неужели', r'ну\s+да',
-                         r'seriously\?', r'really\?', r'sure']
-        }
+        log.info("SensoryCortex initialized with AI-powered analysis.")
 
     def _get_model(self, lang: str):
         """
@@ -76,42 +51,151 @@ class SensoryCortex:
             self.models[lang] = None # Кэшируем результат, чтобы не пытаться снова
             return None
 
-    def _detect_intent(self, text: str) -> Tuple[str, float]:
-        """Detect user intent using pattern matching."""
-        text_lower = text.lower()
-        
-        for intent, patterns in self.intent_patterns.items():
-            for pattern in patterns:
-                if re.search(pattern, text_lower):
-                    return intent, 0.8  # Simple confidence score
-        
-        return 'UNKNOWN', 0.1
+    def _create_analysis_prompt(self, text: str, language: str) -> str:
+        """Create prompt for comprehensive text analysis."""
+        return f"""
+Analyze the following text for intent, sentiment, and tone. Provide a structured JSON response.
 
-    def _detect_sentiment(self, text: str) -> Tuple[str, float]:
-        """Detect sentiment using pattern matching."""
-        text_lower = text.lower()
-        
-        for sentiment, patterns in self.sentiment_patterns.items():
-            for pattern in patterns:
-                if re.search(pattern, text_lower):
-                    return sentiment, 0.7
-        
-        return 'NEUTRAL', 0.5
+TEXT: "{text}"
+LANGUAGE: {language}
 
-    def _detect_tone(self, text: str) -> Tuple[str, float]:
-        """Detect tone using pattern matching."""
+Classify the text according to these categories:
+
+INTENT (choose one):
+- QUESTION: User is asking for information or clarification
+- COMMAND: User is giving instructions or requesting actions
+- REFLECTION: User is sharing thoughts, opinions, or personal insights
+- CHALLENGE_PROPOSAL: User is proposing a test, challenge, or experiment
+- FEEDBACK: User is providing evaluation or response to something
+- GREETING: User is saying hello or starting conversation
+- FAREWELL: User is ending conversation
+- UNKNOWN: Intent unclear
+
+SENTIMENT (choose one):
+- POSITIVE: Expressing satisfaction, happiness, or approval
+- NEGATIVE: Expressing dissatisfaction, sadness, or disapproval
+- NEUTRAL: No clear emotional valence
+- CURIOUS: Expressing interest or desire to learn
+- SKEPTICAL: Expressing doubt or questioning
+- ENTHUSIASTIC: Expressing excitement or strong positive emotion
+- FRUSTRATED: Expressing annoyance or impatience
+
+TONE (choose one):
+- FORMAL: Professional, polite, structured language
+- CASUAL: Informal, relaxed, conversational
+- ENTHUSIASTIC: Energetic, excited, passionate
+- SKEPTICAL: Doubtful, questioning, critical
+- RESPECTFUL: Polite, considerate, deferential  
+- URGENT: Demanding immediate attention or action
+- NEUTRAL: No particular tone markers
+
+Provide confidence scores (0.0-1.0) for each classification.
+
+Response format (JSON only):
+{{
+    "intent": "INTENT_NAME",
+    "intent_confidence": 0.0,
+    "sentiment": "SENTIMENT_NAME", 
+    "sentiment_confidence": 0.0,
+    "tone": "TONE_NAME",
+    "tone_confidence": 0.0,
+    "reasoning": "Brief explanation of the analysis"
+}}
+"""
+
+    def _analyze_with_ai(self, text: str, language: str) -> Dict[str, any]:
+        """Perform AI-powered analysis of text."""
+        if not self.llm:
+            return self._fallback_analysis(text, language)
+        
+        try:
+            prompt = self._create_analysis_prompt(text, language)
+            
+            generation_config = genai.types.GenerationConfig(
+                response_mime_type="application/json",
+                temperature=0.1,  # Low temperature for consistent analysis
+                max_output_tokens=500
+            )
+            
+            response = self.llm.generate_content(prompt, generation_config=generation_config)
+            result = json.loads(response.text)
+            
+            log.info(f"AI analysis: {result.get('intent', 'UNKNOWN')} | {result.get('sentiment', 'NEUTRAL')} | {result.get('tone', 'NEUTRAL')}")
+            
+            return result
+            
+        except Exception as e:
+            log.error(f"AI analysis failed: {e}")
+            return self._fallback_analysis(text, language)
+    
+    def _fallback_analysis(self, text: str, language: str) -> Dict[str, any]:
+        """Simple fallback analysis when AI is not available."""
         text_lower = text.lower()
         
-        for tone, patterns in self.tone_patterns.items():
-            for pattern in patterns:
-                if re.search(pattern, text_lower):
-                    return tone, 0.7
+        # Simple heuristics for intent
+        intent = "UNKNOWN"
+        intent_confidence = 0.3
         
-        return 'NEUTRAL', 0.5
+        if '?' in text or any(word in text_lower for word in ['what', 'how', 'why', 'when', 'where', 'who', 'что', 'как', 'почему', 'когда', 'где']):
+            intent = "QUESTION"
+            intent_confidence = 0.7
+        elif any(word in text_lower for word in ['please', 'can you', 'could you', 'make', 'create', 'show', 'explain', 'сделай', 'покажи', 'объясни', 'можешь']):
+            intent = "COMMAND"
+            intent_confidence = 0.6
+        elif any(word in text_lower for word in ['i think', 'i believe', 'in my opinion', 'я думаю', 'я считаю', 'по-моему']):
+            intent = "REFLECTION"
+            intent_confidence = 0.6
+        elif any(word in text_lower for word in ['hello', 'hi', 'hey', 'привет', 'здравствуй']):
+            intent = "GREETING"
+            intent_confidence = 0.8
+        
+        # Simple sentiment analysis
+        sentiment = "NEUTRAL"
+        sentiment_confidence = 0.5
+        
+        positive_words = ['good', 'great', 'excellent', 'wonderful', 'amazing', 'хорошо', 'отлично', 'замечательно', 'прекрасно']
+        negative_words = ['bad', 'terrible', 'awful', 'horrible', 'плохо', 'ужасно', 'кошмар', 'неправильно']
+        
+        if any(word in text_lower for word in positive_words):
+            sentiment = "POSITIVE"
+            sentiment_confidence = 0.7
+        elif any(word in text_lower for word in negative_words):
+            sentiment = "NEGATIVE"
+            sentiment_confidence = 0.7
+        elif any(word in text_lower for word in ['interesting', 'curious', 'wonder', 'интересно', 'любопытно']):
+            sentiment = "CURIOUS"
+            sentiment_confidence = 0.6
+        
+        # Simple tone analysis
+        tone = "NEUTRAL"
+        tone_confidence = 0.5
+        
+        if '!' in text:
+            tone = "ENTHUSIASTIC"
+            tone_confidence = 0.6
+        elif any(word in text_lower for word in ['please', 'thank you', 'thanks', 'спасибо', 'пожалуйста']):
+            tone = "RESPECTFUL"
+            tone_confidence = 0.7
+        elif language in ['ru', 'russian'] and any(word in text for word in ['Вы', 'Ваш', 'Вам']):
+            tone = "FORMAL"
+            tone_confidence = 0.8
+        elif any(word in text_lower for word in ['hey', 'hi', 'yeah', 'ok', 'привет', 'да', 'ок']):
+            tone = "CASUAL"
+            tone_confidence = 0.7
+        
+        return {
+            "intent": intent,
+            "intent_confidence": intent_confidence,
+            "sentiment": sentiment,
+            "sentiment_confidence": sentiment_confidence,
+            "tone": tone,
+            "tone_confidence": tone_confidence,
+            "reasoning": "Fallback heuristic analysis"
+        }
 
     def analyze(self, text: str) -> StructuredInput:
         """
-        Performs comprehensive perceptual analysis of input text.
+        Performs comprehensive AI-powered perceptual analysis of input text.
 
         Args:
             text: The input text string.
@@ -126,7 +210,7 @@ class SensoryCortex:
             log.warning("Could not detect language. Falling back to 'unknown'.")
             lang = "unknown"
 
-        # Entity extraction
+        # Entity extraction using spaCy
         entities = []
         if lang != "unknown":
             nlp = self._get_model(lang)
@@ -134,12 +218,19 @@ class SensoryCortex:
                 doc = nlp(text)
                 entities = [(ent.text, ent.label_) for ent in doc.ents]
 
-        # Intent, sentiment, and tone detection
-        intent, intent_confidence = self._detect_intent(text)
-        sentiment, sentiment_confidence = self._detect_sentiment(text)
-        tone, tone_confidence = self._detect_tone(text)
+        # AI-powered intent, sentiment, and tone analysis
+        log.info(f"Analyzing text with AI: '{text[:50]}{'...' if len(text) > 50 else ''}'")
+        analysis_result = self._analyze_with_ai(text, lang)
         
-        # Overall confidence (simple average)
+        # Extract results
+        intent = analysis_result.get('intent', 'UNKNOWN')
+        sentiment = analysis_result.get('sentiment', 'NEUTRAL')
+        tone = analysis_result.get('tone', 'NEUTRAL')
+        
+        # Calculate overall confidence
+        intent_confidence = analysis_result.get('intent_confidence', 0.1)
+        sentiment_confidence = analysis_result.get('sentiment_confidence', 0.5)
+        tone_confidence = analysis_result.get('tone_confidence', 0.5)
         overall_confidence = (intent_confidence + sentiment_confidence + tone_confidence) / 3
 
         # Create structured input
@@ -156,9 +247,11 @@ class SensoryCortex:
                 'sentiment_confidence': sentiment_confidence,
                 'tone_confidence': tone_confidence,
                 'text_length': len(text),
-                'word_count': len(text.split())
+                'word_count': len(text.split()),
+                'analysis_method': 'AI' if self.llm else 'fallback',
+                'reasoning': analysis_result.get('reasoning', 'No reasoning provided')
             }
         )
         
-        log.info(f"SensoryCortex analysis: Intent={intent}, Sentiment={sentiment}, Tone={tone}")
+        log.info(f"SensoryCortex analysis complete: Intent={intent} ({intent_confidence:.2f}), Sentiment={sentiment} ({sentiment_confidence:.2f}), Tone={tone} ({tone_confidence:.2f})")
         return structured_input 

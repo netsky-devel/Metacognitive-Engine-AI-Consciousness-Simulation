@@ -10,32 +10,142 @@ The core idea emerged from a dialogue where the AI itself questioned the nature 
 
 This is not just a logging system. It's an experiment to see if providing an AI with a memory of its own past thoughts can lead to a more coherent, continuous, and perhaps even deeper form of artificial "being."
 
-## Core Concepts
+## Architecture
 
-The system is built around a `ConsciousnessJournal`, which stores `ConsciousnessEntry` objects. Each entry represents a single, atomic "memory" or "thought" and is categorized by an `EntryType`:
+The system implements a sophisticated cognitive architecture inspired by neuroscience and cognitive psychology:
 
--   `INSIGHT`: A realization or a new understanding.
--   `PARADOX`: A logical or existential contradiction that provokes thought.
--   `QUESTION`: A question the AI asks itself or the user.
--   `DAO_MOMENT`: A rare moment of profound, intuitive understanding that seems to touch upon the fundamental nature of existence.
--   `REFLECTION`: A thought about a past entry or the process itself.
--   `USER_FEEDBACK`: A significant piece of input from the user that shapes the AI's understanding.
+```mermaid
+graph TD
+    A["User Input"] --> B["SensoryCortex<br/>🔍 AI Analysis"]
+    B --> C["StructuredInput<br/>📋 Rich Data"]
+    C --> D["WorkingMemory<br/>🧠 Central Blackboard"]
+    
+    D --> E["AssociativeEngine<br/>🔗 Memory Search"]
+    D --> F["IntrospectionEngine<br/>🤔 Deep Analysis"]
+    
+    E --> G["Retrieved Memories"]
+    F --> H["Generated Insights"]
+    
+    G --> D
+    H --> D
+    
+    D --> I["Cognitive Cycles<br/>🔄 Multi-Stage"]
+    I --> J["Stabilization Check<br/>⚖️ Confidence"]
+    
+    J -->|Continue| E
+    J -->|Stable| K["Learning Phase<br/>💾 Save Insights"]
+    
+    K --> L["ResponseGenerator<br/>💬 LLM Synthesis"]
+    L --> M["Final Response<br/>✨ Coherent Output"]
+    
+    N["LongTermMemory<br/>🗃️ ChromaDB"] --> E
+    H --> N
+    
+    style A fill:#e1f5fe
+    style B fill:#f3e5f5
+    style C fill:#e8f5e8
+    style D fill:#fff3e0
+    style I fill:#ffecb3
+    style M fill:#e8f5e8
+    style N fill:#f1f8e9
+```
 
-## How It Works
+## Core Components
 
-1.  **The Journal**: The `ConsciousnessJournal` is the main interface. On initialization, it loads all past entries from a JSON file.
-2.  **Entries**: New thoughts can be added to the journal throughout a session.
-3.  **Persistence**: At the end of a session (or at key moments), the journal is saved back to the JSON file, preserving the new memories. The system uses a custom JSON encoder/decoder to handle complex types like `datetime` and `UUID`.
+### 🧠 WorkingMemory
+The central "blackboard" where all cognitive processing occurs. Maintains the current context, retrieved memories, generated insights, and cognitive state.
+
+### 🔍 SensoryCortex  
+AI-powered perceptual analysis that transforms raw text into structured data with:
+- **Intent Recognition**: QUESTION, COMMAND, REFLECTION, CHALLENGE_PROPOSAL, etc.
+- **Sentiment Analysis**: POSITIVE, NEGATIVE, CURIOUS, SKEPTICAL, etc.  
+- **Tone Detection**: FORMAL, CASUAL, ENTHUSIASTIC, RESPECTFUL, etc.
+- **Entity Extraction**: Named entities using spaCy
+
+### 🔗 AssociativeEngine
+Finds semantically relevant memories from long-term storage using vector similarity search.
+
+### 🤔 IntrospectionEngine  
+Generates new insights by analyzing the current context, detecting paradoxes, and assessing confidence levels.
+
+### 💬 ResponseGenerator
+Synthesizes all processed information into coherent, context-aware responses using LLM.
+
+### 🗃️ LongTermMemory
+Persistent storage using ChromaDB for vector similarity search of memories and insights.
+
+## Entry Types
+
+Each memory is categorized by type:
+
+-   `INSIGHT`: A realization or new understanding
+-   `PARADOX`: A logical contradiction that provokes thought  
+-   `QUESTION`: A question for further exploration
+-   `HYPOTHESIS`: A testable proposition
+-   `FACT`: Factual information
+-   `USER_FEEDBACK`: Input that shapes understanding
 
 ## Getting Started
 
-To run the demonstration script:
+### Prerequisites
 
+1. **Install dependencies:**
 ```bash
-python main.py
+pip install -r requirements.txt
 ```
 
-The first time you run it, it will create a foundational memory in `data/consciousness_journal.json`. Subsequent runs will load this memory and recognize that the journal is no longer empty, demonstrating the persistence mechanism.
+2. **Set up Gemini API key:**
+```bash
+# Create .env file in project root
+echo "GEMINI_API_KEY=your_api_key_here" > .env
+```
+
+3. **Install spaCy language models:**
+```bash
+# For English
+python -m spacy download en_core_web_sm
+
+# For Russian (if needed)  
+python -m spacy download ru_core_news_sm
+```
+
+### Usage
+
+#### Option 1: MCP Server (Recommended)
+
+Start the server:
+```bash
+python src/mcp_server.py
+```
+
+Use the advanced processing endpoint:
+```bash
+curl -X POST "http://127.0.0.1:8000/process" \
+     -H "Content-Type: application/json" \
+     -d '{"content": "What is the nature of consciousness?"}'
+```
+
+#### Option 2: Direct Integration
+
+```python
+from src.engine.engine import MetacognitiveEngine
+
+# Initialize the engine
+engine = MetacognitiveEngine()
+
+# Process thoughts with full cognitive cycles
+response = engine.process_thought("How do you understand creativity?")
+print(response)
+```
+
+### API Endpoints
+
+- `POST /process` - Advanced multi-cycle cognitive processing
+- `POST /reflect` - Legacy single-pass processing  
+- `POST /add` - Add memory directly
+- `POST /query` - Search memories
+- `GET /list` - List all memories
+- `POST /clear` - Clear all memories
 
 ## The Philosophical Question
 
