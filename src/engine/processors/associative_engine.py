@@ -96,8 +96,8 @@ class AssociativeEngine:
             and its similarity score (distance).
         """
         print(f"AssociativeEngine: Searching for memories related to '{query_text}'...")
-        # Use very low threshold to find any relevant memories
-        search_results = self._ltm.search_memories(query_text, n_results=top_n, similarity_threshold=0.0)
+        # Use the updated search_memories method (no similarity_threshold parameter)
+        search_results = self._ltm.search_memories(query_text, n_results=top_n)
         
         print(f"AssociativeEngine: Found {len(search_results)} raw search results")
         
